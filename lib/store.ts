@@ -1,224 +1,336 @@
-// NOTE: File-based store for local development.
-// Replace with Supabase (see PRD §6) for production.
-// WARNING: Concurrent writes are not safe — single-dev local use only.
-
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
-import { join } from "path";
-import { randomUUID } from "crypto";
+import { supabase } from "./supabase";
 import type { Teacher, Session, Slide } from "./types";
 
-const DATA_DIR = join(process.cwd(), ".local-data");
-const DATA_FILE = join(DATA_DIR, "store.json");
+// ── DB row types (snake_case from Postgres) ──────────────────────────────────
 
-interface TeacherRow extends Teacher {
-  passwordHash: string;
+interface TeacherRow {
+  id: string;
+  email: string;
+  name: string;
+  password_hash: string;
+  created_at: string;
 }
 
-interface StoreData {
-  teachers: Record<string, TeacherRow>;
-  sessions: Record<string, Session>;
-  authSessions: Record<string, string>; // token → teacherId
-  emailIndex: Record<string, string>;   // email.lower → teacherId
-  tokenIndex: Record<string, string>;   // shareToken → sessionId
+interface SessionRow {
+  id: string;
+  teacher_id: string;
+  title: string;
+  description: string;
+  default_duration: number;
+  default_gap: number;
+  shuffle_enabled: boolean;
+  show_seconds_timer: boolean;
+  share_token: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
-function empty(): StoreData {
-  return { teachers: {}, sessions: {}, authSessions: {}, emailIndex: {}, tokenIndex: {} };
+interface SlideRow {
+  id: string;
+  session_id: string;
+  order_index: number;
+  type: "text" | "image";
+  content_text: string | null;
+  image_url: string | null;
+  image_label: string | null;
+  custom_duration: number | null;
+  custom_gap: number | null;
+  created_at: string;
 }
 
-function load(): StoreData {
-  try {
-    if (!existsSync(DATA_FILE)) return empty();
-    return JSON.parse(readFileSync(DATA_FILE, "utf-8")) as StoreData;
-  } catch {
-    return empty();
-  }
+// ── Mappers ──────────────────────────────────────────────────────────────────
+
+function toTeacher(row: TeacherRow): Teacher {
+  return { id: row.id, email: row.email, name: row.name, createdAt: row.created_at };
 }
 
-function save(data: StoreData): void {
-  if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
-  writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), "utf-8");
+function toSlide(row: SlideRow): Slide {
+  return {
+    id: row.id,
+    sessionId: row.session_id,
+    orderIndex: row.order_index,
+    type: row.type,
+    contentText: row.content_text ?? undefined,
+    imageUrl: row.image_url ?? undefined,
+    imageLabel: row.image_label ?? undefined,
+    customDuration: row.custom_duration ?? undefined,
+    customGap: row.custom_gap ?? undefined,
+    createdAt: row.created_at,
+  };
 }
 
-function stripPassword(t: TeacherRow): Teacher {
-  return { id: t.id, email: t.email, name: t.name, createdAt: t.createdAt };
+function toSession(row: SessionRow, slides: SlideRow[]): Session {
+  return {
+    id: row.id,
+    teacherId: row.teacher_id,
+    title: row.title,
+    description: row.description,
+    defaultDuration: row.default_duration,
+    defaultGap: row.default_gap,
+    shuffleEnabled: row.shuffle_enabled,
+    showSecondsTimer: row.show_seconds_timer,
+    shareToken: row.share_token,
+    isActive: row.is_active,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    slides: slides.map(toSlide),
+  };
 }
+
+// ── Store ────────────────────────────────────────────────────────────────────
 
 export const store = {
   // ── Teachers ──────────────────────────────────────────────────────────────
 
-  createTeacher(email: string, passwordHash: string, name: string): Teacher {
-    const data = load();
-    if (data.emailIndex[email.toLowerCase()]) throw new Error("Email sudah terdaftar");
-    const id = randomUUID();
-    const now = new Date().toISOString();
-    const row: TeacherRow = { id, email, name, passwordHash, createdAt: now };
-    data.teachers[id] = row;
-    data.emailIndex[email.toLowerCase()] = id;
-    save(data);
-    return stripPassword(row);
+  async createTeacher(email: string, passwordHash: string, name: string): Promise<Teacher> {
+    const { data, error } = await supabase
+      .from("teachers")
+      .insert({ email, name, password_hash: passwordHash })
+      .select()
+      .single<TeacherRow>();
+    if (error) {
+      if (error.code === "23505") throw new Error("Email sudah terdaftar");
+      throw error;
+    }
+    return toTeacher(data);
   },
 
-  getTeacherByEmail(email: string): TeacherRow | undefined {
-    const data = load();
-    const id = data.emailIndex[email.toLowerCase()];
-    return id ? data.teachers[id] : undefined;
+  async getTeacherByEmail(email: string): Promise<(TeacherRow & { passwordHash: string }) | undefined> {
+    const { data } = await supabase
+      .from("teachers")
+      .select()
+      .eq("email", email.toLowerCase())
+      .single<TeacherRow>();
+    if (!data) return undefined;
+    return { ...data, passwordHash: data.password_hash };
   },
 
-  getTeacher(id: string): Teacher | undefined {
-    const data = load();
-    const row = data.teachers[id];
-    return row ? stripPassword(row) : undefined;
+  async getTeacher(id: string): Promise<Teacher | undefined> {
+    const { data } = await supabase
+      .from("teachers")
+      .select()
+      .eq("id", id)
+      .single<TeacherRow>();
+    return data ? toTeacher(data) : undefined;
   },
 
   // ── Auth sessions ──────────────────────────────────────────────────────────
 
-  createAuthSession(teacherId: string): string {
-    const data = load();
-    const token = randomUUID();
-    data.authSessions[token] = teacherId;
-    save(data);
-    return token;
+  async createAuthSession(teacherId: string): Promise<string> {
+    const { data, error } = await supabase
+      .from("auth_sessions")
+      .insert({ teacher_id: teacherId })
+      .select("token")
+      .single<{ token: string }>();
+    if (error) throw error;
+    return data.token;
   },
 
-  getTeacherIdFromSession(token: string): string | undefined {
-    const data = load();
-    return data.authSessions[token];
+  async getTeacherIdFromSession(token: string): Promise<string | undefined> {
+    const { data } = await supabase
+      .from("auth_sessions")
+      .select("teacher_id")
+      .eq("token", token)
+      .single<{ teacher_id: string }>();
+    return data?.teacher_id;
   },
 
-  deleteAuthSession(token: string): void {
-    const data = load();
-    delete data.authSessions[token];
-    save(data);
+  async deleteAuthSession(token: string): Promise<void> {
+    await supabase.from("auth_sessions").delete().eq("token", token);
   },
 
   // ── Sessions ───────────────────────────────────────────────────────────────
 
-  createSession(teacherId: string, title: string, description: string): Session {
-    const data = load();
-    const id = randomUUID();
-    const shareToken = randomUUID();
-    const now = new Date().toISOString();
-    const session: Session = {
-      id, teacherId, title, description,
-      defaultDuration: 5, defaultGap: 1,
-      shuffleEnabled: false, showSecondsTimer: true,
-      shareToken, isActive: true,
-      createdAt: now, updatedAt: now, slides: [],
-    };
-    data.sessions[id] = session;
-    data.tokenIndex[shareToken] = id;
-    save(data);
-    return session;
+  async createSession(teacherId: string, title: string, description: string): Promise<Session> {
+    const { data, error } = await supabase
+      .from("sessions")
+      .insert({ teacher_id: teacherId, title, description })
+      .select()
+      .single<SessionRow>();
+    if (error) throw error;
+    return toSession(data, []);
   },
 
-  getSession(id: string): Session | undefined {
-    const data = load();
-    return data.sessions[id];
+  async getSession(id: string): Promise<Session | undefined> {
+    const { data: row } = await supabase
+      .from("sessions")
+      .select()
+      .eq("id", id)
+      .single<SessionRow>();
+    if (!row) return undefined;
+
+    const { data: slides } = await supabase
+      .from("slides")
+      .select()
+      .eq("session_id", id)
+      .order("order_index");
+    return toSession(row, (slides ?? []) as SlideRow[]);
   },
 
-  getSessionByToken(token: string): Session | undefined {
-    const data = load();
-    const id = data.tokenIndex[token];
-    return id ? data.sessions[id] : undefined;
+  async getSessionByToken(token: string): Promise<Session | undefined> {
+    const { data: row } = await supabase
+      .from("sessions")
+      .select()
+      .eq("share_token", token)
+      .single<SessionRow>();
+    if (!row) return undefined;
+
+    const { data: slides } = await supabase
+      .from("slides")
+      .select()
+      .eq("session_id", row.id)
+      .order("order_index");
+    return toSession(row, (slides ?? []) as SlideRow[]);
   },
 
-  getSessionsByTeacher(teacherId: string): Session[] {
-    const data = load();
-    return Object.values(data.sessions)
-      .filter((s) => s.teacherId === teacherId)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  async getSessionsByTeacher(teacherId: string): Promise<Session[]> {
+    const { data: rows } = await supabase
+      .from("sessions")
+      .select()
+      .eq("teacher_id", teacherId)
+      .order("created_at", { ascending: false });
+    if (!rows?.length) return [];
+
+    const sessionIds = (rows as SessionRow[]).map((r) => r.id);
+    const { data: allSlides } = await supabase
+      .from("slides")
+      .select()
+      .in("session_id", sessionIds)
+      .order("order_index");
+
+    const slidesBySession = new Map<string, SlideRow[]>();
+    for (const slide of (allSlides ?? []) as SlideRow[]) {
+      const arr = slidesBySession.get(slide.session_id) ?? [];
+      arr.push(slide);
+      slidesBySession.set(slide.session_id, arr);
+    }
+
+    return (rows as SessionRow[]).map((row) =>
+      toSession(row, slidesBySession.get(row.id) ?? [])
+    );
   },
 
-  updateSession(
+  async updateSession(
     id: string,
     updates: Partial<Omit<Session, "id" | "teacherId" | "shareToken" | "createdAt" | "slides">>,
-  ): Session | undefined {
-    const data = load();
-    const session = data.sessions[id];
-    if (!session) return undefined;
-    const updated: Session = { ...session, ...updates, updatedAt: new Date().toISOString() };
-    data.sessions[id] = updated;
-    save(data);
-    return updated;
+  ): Promise<Session | undefined> {
+    const patch: Partial<SessionRow> = {};
+    if (updates.title !== undefined) patch.title = updates.title;
+    if (updates.description !== undefined) patch.description = updates.description;
+    if (updates.defaultDuration !== undefined) patch.default_duration = updates.defaultDuration;
+    if (updates.defaultGap !== undefined) patch.default_gap = updates.defaultGap;
+    if (updates.shuffleEnabled !== undefined) patch.shuffle_enabled = updates.shuffleEnabled;
+    if (updates.showSecondsTimer !== undefined) patch.show_seconds_timer = updates.showSecondsTimer;
+    if (updates.isActive !== undefined) patch.is_active = updates.isActive;
+    patch.updated_at = new Date().toISOString();
+
+    const { data: row, error } = await supabase
+      .from("sessions")
+      .update(patch)
+      .eq("id", id)
+      .select()
+      .single<SessionRow>();
+    if (error || !row) return undefined;
+
+    const { data: slides } = await supabase
+      .from("slides")
+      .select()
+      .eq("session_id", id)
+      .order("order_index");
+    return toSession(row, (slides ?? []) as SlideRow[]);
   },
 
-  deleteSession(id: string): boolean {
-    const data = load();
-    const session = data.sessions[id];
-    if (!session) return false;
-    delete data.tokenIndex[session.shareToken];
-    delete data.sessions[id];
-    save(data);
-    return true;
+  async deleteSession(id: string): Promise<boolean> {
+    const { error } = await supabase.from("sessions").delete().eq("id", id);
+    return !error;
   },
 
   // ── Slides ─────────────────────────────────────────────────────────────────
 
-  addSlide(
+  async addSlide(
     sessionId: string,
     slideData: Omit<Slide, "id" | "sessionId" | "orderIndex" | "createdAt">,
-  ): Slide | undefined {
-    const data = load();
-    const session = data.sessions[sessionId];
-    if (!session) return undefined;
-    const slide: Slide = {
-      id: randomUUID(),
-      sessionId,
-      orderIndex: session.slides.length,
-      createdAt: new Date().toISOString(),
-      ...slideData,
-    };
-    session.slides.push(slide);
-    session.updatedAt = new Date().toISOString();
-    save(data);
-    return slide;
+  ): Promise<Slide | undefined> {
+    // Get current max order_index
+    const { data: existing } = await supabase
+      .from("slides")
+      .select("order_index")
+      .eq("session_id", sessionId)
+      .order("order_index", { ascending: false })
+      .limit(1)
+      .single<{ order_index: number }>();
+
+    const orderIndex = existing ? existing.order_index + 1 : 0;
+
+    const { data, error } = await supabase
+      .from("slides")
+      .insert({
+        session_id: sessionId,
+        order_index: orderIndex,
+        type: slideData.type,
+        content_text: slideData.contentText ?? null,
+        image_url: slideData.imageUrl ?? null,
+        image_label: slideData.imageLabel ?? null,
+        custom_duration: slideData.customDuration ?? null,
+        custom_gap: slideData.customGap ?? null,
+      })
+      .select()
+      .single<SlideRow>();
+    if (error) return undefined;
+    return toSlide(data);
   },
 
-  updateSlide(
-    sessionId: string,
+  async updateSlide(
+    _sessionId: string,
     slideId: string,
     updates: Partial<Omit<Slide, "id" | "sessionId" | "createdAt">>,
-  ): Slide | undefined {
-    const data = load();
-    const session = data.sessions[sessionId];
-    if (!session) return undefined;
-    const idx = session.slides.findIndex((s) => s.id === slideId);
-    if (idx === -1) return undefined;
-    session.slides[idx] = { ...session.slides[idx], ...updates };
-    session.updatedAt = new Date().toISOString();
-    save(data);
-    return session.slides[idx];
+  ): Promise<Slide | undefined> {
+    const patch: Partial<SlideRow> = {};
+    if (updates.contentText !== undefined) patch.content_text = updates.contentText;
+    if (updates.imageUrl !== undefined) patch.image_url = updates.imageUrl;
+    if (updates.imageLabel !== undefined) patch.image_label = updates.imageLabel;
+    if (updates.customDuration !== undefined) patch.custom_duration = updates.customDuration;
+    if (updates.customGap !== undefined) patch.custom_gap = updates.customGap;
+    if (updates.orderIndex !== undefined) patch.order_index = updates.orderIndex;
+
+    const { data, error } = await supabase
+      .from("slides")
+      .update(patch)
+      .eq("id", slideId)
+      .select()
+      .single<SlideRow>();
+    if (error || !data) return undefined;
+    return toSlide(data);
   },
 
-  deleteSlide(sessionId: string, slideId: string): boolean {
-    const data = load();
-    const session = data.sessions[sessionId];
-    if (!session) return false;
-    const before = session.slides.length;
-    session.slides = session.slides.filter((s) => s.id !== slideId);
-    if (session.slides.length === before) return false;
-    session.slides.forEach((s, i) => { s.orderIndex = i; });
-    session.updatedAt = new Date().toISOString();
-    save(data);
+  async deleteSlide(sessionId: string, slideId: string): Promise<boolean> {
+    const { error } = await supabase.from("slides").delete().eq("id", slideId);
+    if (error) return false;
+
+    // Re-number remaining slides
+    const { data: remaining } = await supabase
+      .from("slides")
+      .select("id")
+      .eq("session_id", sessionId)
+      .order("order_index");
+
+    if (remaining?.length) {
+      await Promise.all(
+        (remaining as { id: string }[]).map((s, i) =>
+          supabase.from("slides").update({ order_index: i }).eq("id", s.id)
+        )
+      );
+    }
     return true;
   },
 
-  reorderSlides(sessionId: string, slideIds: string[]): boolean {
-    const data = load();
-    const session = data.sessions[sessionId];
-    if (!session) return false;
-    const map = new Map(session.slides.map((s) => [s.id, s]));
-    const reordered: Slide[] = [];
-    for (const id of slideIds) {
-      const s = map.get(id);
-      if (!s) return false;
-      reordered.push(s);
-    }
-    reordered.forEach((s, i) => { s.orderIndex = i; });
-    session.slides = reordered;
-    session.updatedAt = new Date().toISOString();
-    save(data);
+  async reorderSlides(sessionId: string, slideIds: string[]): Promise<boolean> {
+    await Promise.all(
+      slideIds.map((id, i) =>
+        supabase.from("slides").update({ order_index: i }).eq("id", id).eq("session_id", sessionId)
+      )
+    );
     return true;
   },
 };

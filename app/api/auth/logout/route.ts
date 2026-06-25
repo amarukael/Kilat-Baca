@@ -7,7 +7,7 @@ export async function POST() {
   const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;
   if (token) {
-    store.deleteAuthSession(token);
+    await store.deleteAuthSession(token);
     jar.delete(SESSION_COOKIE);
   }
   return NextResponse.json({ ok: true });

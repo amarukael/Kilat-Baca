@@ -14,7 +14,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const teacherId = await getTeacherId();
   if (!teacherId) redirect("/login");
 
-  const teacher = store.getTeacher(teacherId);
+  const teacher = await store.getTeacher(teacherId);
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg-light)" }}>

@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireTeacherId } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
+import { randomUUID } from "crypto";
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
-const ALLOWED = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+const ALLOWED: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/gif": "gif",
+  "image/webp": "webp",
+};
+const BUCKET = "slide-images";
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,7 +24,8 @@ export async function POST(req: NextRequest) {
     const file = form.get("file") as File | null;
 
     if (!file) return NextResponse.json({ error: "File diperlukan" }, { status: 400 });
-    if (!ALLOWED.includes(file.type)) {
+    const ext = ALLOWED[file.type];
+    if (!ext) {
       return NextResponse.json({ error: "Format tidak didukung (JPG/PNG/GIF/WEBP)" }, { status: 400 });
     }
     if (file.size > MAX_SIZE) {
@@ -24,11 +33,19 @@ export async function POST(req: NextRequest) {
     }
 
     const bytes = await file.arrayBuffer();
-    const base64 = Buffer.from(bytes).toString("base64");
-    const dataUrl = `data:${file.type};base64,${base64}`;
+    const path = `${randomUUID()}.${ext}`;
 
-    // In production: upload to Supabase Storage, return CDN URL
-    return NextResponse.json({ url: dataUrl, name: file.name });
+    const { error } = await supabase.storage
+      .from(BUCKET)
+      .upload(path, bytes, { contentType: file.type, upsert: false });
+
+    if (error) {
+      console.error("Storage upload error:", error);
+      return NextResponse.json({ error: "Gagal mengupload gambar" }, { status: 500 });
+    }
+
+    const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(path);
+    return NextResponse.json({ url: urlData.publicUrl, name: file.name });
   } catch {
     return NextResponse.json({ error: "Gagal memproses file" }, { status: 500 });
   }

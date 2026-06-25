@@ -16,8 +16,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Password minimal 8 karakter" }, { status: 400 });
     }
 
-    const teacher = store.createTeacher(email.trim(), hashPassword(password), name.trim());
-    const token = store.createAuthSession(teacher.id);
+    const teacher = await store.createTeacher(email.trim(), hashPassword(password), name.trim());
+    const token = await store.createAuthSession(teacher.id);
 
     const jar = await cookies();
     jar.set(SESSION_COOKIE, token, {

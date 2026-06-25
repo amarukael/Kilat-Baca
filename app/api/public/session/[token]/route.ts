@@ -6,7 +6,7 @@ type Params = Promise<{ token: string }>;
 
 export async function GET(_req: NextRequest, { params }: { params: Params }) {
   const { token } = await params;
-  const session = store.getSessionByToken(token);
+  const session = await store.getSessionByToken(token);
 
   if (!session || !session.isActive) {
     return NextResponse.json({ error: "Sesi tidak ditemukan" }, { status: 404 });

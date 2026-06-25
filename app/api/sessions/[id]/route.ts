@@ -5,7 +5,7 @@ import { requireTeacherId } from "@/lib/auth";
 type Params = Promise<{ id: string }>;
 
 async function getOwnedSession(teacherId: string, sessionId: string) {
-  const session = store.getSession(sessionId);
+  const session = await store.getSession(sessionId);
   if (!session || session.teacherId !== teacherId) return null;
   return session;
 }
@@ -35,7 +35,7 @@ export async function PUT(req: NextRequest, { params }: { params: Params }) {
       shuffleEnabled?: boolean; showSecondsTimer?: boolean;
     };
 
-    const updated = store.updateSession(id, {
+    const updated = await store.updateSession(id, {
       ...(body.title !== undefined && { title: body.title }),
       ...(body.description !== undefined && { description: body.description }),
       ...(body.defaultDuration !== undefined && { defaultDuration: body.defaultDuration }),
@@ -56,7 +56,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Params }) 
     const { id } = await params;
     const session = await getOwnedSession(teacherId, id);
     if (!session) return NextResponse.json({ error: "Tidak ditemukan" }, { status: 404 });
-    store.deleteSession(id);
+    await store.deleteSession(id);
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

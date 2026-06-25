@@ -9,7 +9,7 @@ export async function POST(req: NextRequest, { params }: { params: Params }) {
     const teacherId = await requireTeacherId();
     const { id: sessionId } = await params;
 
-    const session = store.getSession(sessionId);
+    const session = await store.getSession(sessionId);
     if (!session || session.teacherId !== teacherId) {
       return NextResponse.json({ error: "Tidak ditemukan" }, { status: 404 });
     }
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest, { params }: { params: Params }) {
       return NextResponse.json({ error: "Gambar diperlukan" }, { status: 400 });
     }
 
-    const slide = store.addSlide(sessionId, {
+    const slide = await store.addSlide(sessionId, {
       type: body.type,
       contentText: body.contentText,
       imageUrl: body.imageUrl,
@@ -51,7 +51,7 @@ export async function PUT(req: NextRequest, { params }: { params: Params }) {
     const teacherId = await requireTeacherId();
     const { id: sessionId } = await params;
 
-    const session = store.getSession(sessionId);
+    const session = await store.getSession(sessionId);
     if (!session || session.teacherId !== teacherId) {
       return NextResponse.json({ error: "Tidak ditemukan" }, { status: 404 });
     }
@@ -61,7 +61,7 @@ export async function PUT(req: NextRequest, { params }: { params: Params }) {
       return NextResponse.json({ error: "slideIds harus berupa array" }, { status: 400 });
     }
 
-    const ok = store.reorderSlides(sessionId, slideIds);
+    const ok = await store.reorderSlides(sessionId, slideIds);
     if (!ok) return NextResponse.json({ error: "Gagal mengubah urutan" }, { status: 400 });
 
     return NextResponse.json({ ok: true });

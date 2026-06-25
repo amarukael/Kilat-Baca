@@ -8,7 +8,7 @@ export async function getTeacherId(): Promise<string | null> {
   const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;
   if (!token) return null;
-  return store.getTeacherIdFromSession(token) ?? null;
+  return (await store.getTeacherIdFromSession(token)) ?? null;
 }
 
 export async function requireTeacherId(): Promise<string> {

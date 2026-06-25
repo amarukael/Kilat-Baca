@@ -11,12 +11,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email dan password wajib diisi" }, { status: 400 });
     }
 
-    const teacher = store.getTeacherByEmail(email.trim());
+    const teacher = await store.getTeacherByEmail(email.trim());
     if (!teacher || !verifyPassword(password, teacher.passwordHash)) {
       return NextResponse.json({ error: "Email atau password salah" }, { status: 401 });
     }
 
-    const token = store.createAuthSession(teacher.id);
+    const token = await store.createAuthSession(teacher.id);
 
     const jar = await cookies();
     jar.set(SESSION_COOKIE, token, {
