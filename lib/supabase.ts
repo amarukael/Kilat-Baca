@@ -11,4 +11,5 @@ if (!supabaseUrl || !supabaseKey) {
 // NEVER import this in client components or expose via NEXT_PUBLIC_.
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: { persistSession: false },
+  db: { schema: "kilat_baca" },
 });
