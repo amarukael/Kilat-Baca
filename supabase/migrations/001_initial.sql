@@ -56,13 +56,5 @@ create index if not exists slides_session_id_idx on slides(session_id);
 create index if not exists sessions_teacher_id_idx on sessions(teacher_id);
 create index if not exists auth_sessions_teacher_id_idx on auth_sessions(teacher_id);
 
--- ── Storage bucket for slide images ─────────────────────────────────────────
--- Run in Supabase dashboard → Storage → New bucket, or via the SQL below.
--- NOTE: Bucket policies are managed in the dashboard or via the API.
-
-insert into storage.buckets (id, name, public)
-  values ('slide-images', 'slide-images', true)
-  on conflict (id) do nothing;
-
--- Allow service role (used by API routes) to read/write all objects.
--- Public read is enabled via bucket.public = true above.
+-- Images are stored in Google Drive (see /api/upload).
+-- No Supabase Storage bucket needed.

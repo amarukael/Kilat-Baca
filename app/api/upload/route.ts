@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireTeacherId } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
+import { Readable } from "stream";
 import { randomUUID } from "crypto";
+import { requireTeacherId } from "@/lib/auth";
+import { drive, DRIVE_FOLDER_ID } from "@/lib/gdrive";
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 const ALLOWED: Record<string, string> = {
@@ -10,7 +11,6 @@ const ALLOWED: Record<string, string> = {
   "image/gif": "gif",
   "image/webp": "webp",
 };
-const BUCKET = "slide-images";
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,20 +33,36 @@ export async function POST(req: NextRequest) {
     }
 
     const bytes = await file.arrayBuffer();
-    const path = `${randomUUID()}.${ext}`;
 
-    const { error } = await supabase.storage
-      .from(BUCKET)
-      .upload(path, bytes, { contentType: file.type, upsert: false });
+    // Upload to Google Drive
+    const created = await drive.files.create({
+      requestBody: {
+        name: `${randomUUID()}.${ext}`,
+        parents: [DRIVE_FOLDER_ID],
+        mimeType: file.type,
+      },
+      media: {
+        mimeType: file.type,
+        body: Readable.from(Buffer.from(bytes)),
+      },
+      fields: "id",
+    });
 
-    if (error) {
-      console.error("Storage upload error:", error);
-      return NextResponse.json({ error: "Gagal mengupload gambar" }, { status: 500 });
+    const fileId = created.data.id;
+    if (!fileId) {
+      return NextResponse.json({ error: "Gagal mendapatkan ID file dari Drive" }, { status: 500 });
     }
 
-    const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(path);
-    return NextResponse.json({ url: urlData.publicUrl, name: file.name });
-  } catch {
-    return NextResponse.json({ error: "Gagal memproses file" }, { status: 500 });
+    // Make file publicly readable
+    await drive.permissions.create({
+      fileId,
+      requestBody: { type: "anyone", role: "reader" },
+    });
+
+    const url = `https://drive.google.com/uc?export=view&id=${fileId}`;
+    return NextResponse.json({ url, name: file.name });
+  } catch (err) {
+    console.error("Drive upload error:", err);
+    return NextResponse.json({ error: "Gagal mengupload gambar" }, { status: 500 });
   }
 }
