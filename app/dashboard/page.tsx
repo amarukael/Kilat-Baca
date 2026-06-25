@@ -15,9 +15,6 @@ export default function DashboardPage() {
   const router = useRouter();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-  const [newTitle, setNewTitle] = useState("");
-  const [showCreate, setShowCreate] = useState(false);
   const [toast, setToast] = useState("");
 
   const showToast = (msg: string) => {
@@ -35,26 +32,6 @@ export default function DashboardPage() {
   };
 
   useEffect(() => { fetchSessions(); }, []);
-
-  const createSession = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTitle.trim()) return;
-    setCreating(true);
-    const res = await fetch("/api/sessions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: newTitle.trim() }),
-    });
-    if (res.ok) {
-      const data = await res.json() as { session: Session };
-      router.push(`/dashboard/sesi/${data.session.id}`);
-    } else {
-      showToast("Gagal membuat sesi");
-      setCreating(false);
-    }
-    setNewTitle("");
-    setShowCreate(false);
-  };
 
   const deleteSession = async (id: string, title: string) => {
     if (!confirm(`Hapus sesi "${title}"? Semua slide akan terhapus.`)) return;
@@ -95,45 +72,12 @@ export default function DashboardPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "28px" }}>
         <h1 style={{ ...fc(700, "24px"), color: "var(--text-dark)", margin: 0 }}>Sesi Pembelajaran</h1>
         <button
-          onClick={() => setShowCreate(true)}
+          onClick={() => router.push("/dashboard/sesi")}
           style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px", background: "var(--primary)", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", ...fr(600, "14px") }}
         >
           + Buat Sesi Baru
         </button>
       </div>
-
-      {showCreate && (
-        <div className="modal-overlay" onClick={() => setShowCreate(false)}>
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{ background: "var(--bg-card)", borderRadius: "16px", padding: "32px", width: "100%", maxWidth: "440px" }}
-          >
-            <h2 style={{ ...fc(700, "20px"), color: "var(--text-dark)", marginBottom: "20px" }}>Buat Sesi Baru</h2>
-            <form onSubmit={createSession}>
-              <input
-                autoFocus type="text" required value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                placeholder="Nama sesi, misal: Minggu 1 — Huruf A"
-                style={{ width: "100%", padding: "12px", border: "2px solid var(--border)", borderRadius: "8px", ...fr(400, "14px"), background: "var(--bg-light)", color: "var(--text-dark)", marginBottom: "16px" }}
-              />
-              <div style={{ display: "flex", gap: "12px" }}>
-                <button
-                  type="button" onClick={() => setShowCreate(false)}
-                  style={{ flex: 1, padding: "12px", background: "var(--bg-light)", border: "1px solid var(--border)", borderRadius: "8px", cursor: "pointer", ...fr(500, "14px"), color: "var(--text-dark)" }}
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit" disabled={creating}
-                  style={{ flex: 1, padding: "12px", background: "var(--primary)", color: "white", border: "none", borderRadius: "8px", cursor: creating ? "not-allowed" : "pointer", ...fr(600, "14px"), opacity: creating ? 0.7 : 1 }}
-                >
-                  {creating ? "Membuat..." : "Buat"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {sessions.length === 0 ? (
         <div style={{ textAlign: "center", paddingTop: "80px" }}>

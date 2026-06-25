@@ -3,6 +3,8 @@
 import { use, useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import type { Session, Slide } from "@/lib/types";
+import SessionEditor from "@/components/teacher/SessionEditor";
+import SlideCard from "@/components/teacher/SlideCard";
 
 const fr = (w: number | string, s: string): React.CSSProperties => ({
   fontFamily: "var(--font-raleway), sans-serif", fontWeight: w, fontSize: s,
@@ -32,7 +34,6 @@ export default function SessionEditorPage({ params }: { params: Promise<{ id: st
   const [toast, setToast] = useState("");
   const [saveTimeout, setSaveTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
 
-  // Settings edit state
   const [title, setTitle] = useState("");
   const [defaultDuration, setDefaultDuration] = useState(3);
   const [defaultGap, setDefaultGap] = useState(1);
@@ -40,7 +41,6 @@ export default function SessionEditorPage({ params }: { params: Promise<{ id: st
   const [showSecondsTimer, setShowSecondsTimer] = useState(false);
   const [isActive, setIsActive] = useState(false);
 
-  // Slide modal state
   const [showSlideModal, setShowSlideModal] = useState(false);
   const [editingSlide, setEditingSlide] = useState<Slide | null>(null);
   const [slideForm, setSlideForm] = useState<SlideFormData>(emptyForm());
@@ -70,8 +70,10 @@ export default function SessionEditorPage({ params }: { params: Promise<{ id: st
 
   useEffect(() => { fetchSession(); }, [fetchSession]);
 
-  // Auto-save settings with debounce
-  const saveSettings = useCallback(async (patch: Partial<{ title: string; defaultDuration: number; defaultGap: number; shuffleEnabled: boolean; showSecondsTimer: boolean; isActive: boolean }>) => {
+  const saveSettings = useCallback(async (patch: Partial<{
+    title: string; defaultDuration: number; defaultGap: number;
+    shuffleEnabled: boolean; showSecondsTimer: boolean; isActive: boolean;
+  }>) => {
     await fetch(`/api/sessions/${sessionId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -136,15 +138,11 @@ export default function SessionEditorPage({ params }: { params: Promise<{ id: st
     let res: Response;
     if (editingSlide) {
       res = await fetch(`/api/slides/${editingSlide.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
       });
     } else {
       res = await fetch(`/api/sessions/${sessionId}/slides`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
       });
     }
 
@@ -154,7 +152,6 @@ export default function SessionEditorPage({ params }: { params: Promise<{ id: st
       showToast(d.error ?? "Gagal menyimpan slide");
       return;
     }
-
     showToast(editingSlide ? "Slide diperbarui" : "Slide ditambahkan");
     setShowSlideModal(false);
     fetchSession();
@@ -163,10 +160,7 @@ export default function SessionEditorPage({ params }: { params: Promise<{ id: st
   const deleteSlide = async (slideId: string) => {
     if (!confirm("Hapus slide ini?")) return;
     const res = await fetch(`/api/slides/${slideId}`, { method: "DELETE" });
-    if (res.ok) {
-      showToast("Slide dihapus");
-      fetchSession();
-    }
+    if (res.ok) { showToast("Slide dihapus"); fetchSession(); }
   };
 
   const moveSlide = async (index: number, direction: -1 | 1) => {
@@ -174,11 +168,9 @@ export default function SessionEditorPage({ params }: { params: Promise<{ id: st
     const target = index + direction;
     if (target < 0 || target >= newSorted.length) return;
     [newSorted[index], newSorted[target]] = [newSorted[target], newSorted[index]];
-    const slideIds = newSorted.map((s) => s.id);
     await fetch(`/api/sessions/${sessionId}/slides`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slideIds }),
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slideIds: newSorted.map((s) => s.id) }),
     });
     fetchSession();
   };
@@ -188,14 +180,17 @@ export default function SessionEditorPage({ params }: { params: Promise<{ id: st
     : session ? `/belajar/${session.shareToken}` : "";
 
   if (loading) {
-    return <div style={{ display: "flex", justifyContent: "center", paddingTop: "80px" }}><span style={{ ...fr(400, "16px"), color: "var(--text-light)" }}>Memuat...</span></div>;
+    return (
+      <div style={{ display: "flex", justifyContent: "center", paddingTop: "80px" }}>
+        <span style={{ ...fr(400, "16px"), color: "var(--text-light)" }}>Memuat...</span>
+      </div>
+    );
   }
 
   if (!session) return null;
 
   return (
     <>
-      {/* Back + title */}
       <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "28px" }}>
         <button
           onClick={() => router.push("/dashboard")}
@@ -217,71 +212,22 @@ export default function SessionEditorPage({ params }: { params: Promise<{ id: st
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: "24px", alignItems: "start" }}>
-        {/* Settings panel */}
-        <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "12px", padding: "20px", display: "flex", flexDirection: "column", gap: "16px" }}>
-          <h2 style={{ ...fr(600, "15px"), color: "var(--text-dark)", margin: 0 }}>Pengaturan Sesi</h2>
+        <SessionEditor
+          title={title}
+          defaultDuration={defaultDuration}
+          defaultGap={defaultGap}
+          shuffleEnabled={shuffleEnabled}
+          showSecondsTimer={showSecondsTimer}
+          isActive={isActive}
+          studentUrl={studentUrl}
+          onTitleChange={(v) => { setTitle(v); debounceSave({ title: v }); }}
+          onDurationChange={(v) => { setDefaultDuration(v); debounceSave({ defaultDuration: v }); }}
+          onGapChange={(v) => { setDefaultGap(v); debounceSave({ defaultGap: v }); }}
+          onShuffleChange={(v) => { setShuffleEnabled(v); saveSettings({ shuffleEnabled: v }); }}
+          onTimerChange={(v) => { setShowSecondsTimer(v); saveSettings({ showSecondsTimer: v }); }}
+          onCopyLink={() => { navigator.clipboard.writeText(studentUrl); showToast("Link disalin!"); }}
+        />
 
-          <div>
-            <label style={{ display: "block", ...fr(500, "12px"), color: "var(--text-light)", marginBottom: "6px" }}>Nama Sesi</label>
-            <input
-              type="text" value={title}
-              onChange={(e) => { setTitle(e.target.value); debounceSave({ title: e.target.value }); }}
-              style={{ width: "100%", padding: "10px", border: "1px solid var(--border)", borderRadius: "8px", ...fr(400, "13px"), background: "var(--bg-light)", color: "var(--text-dark)" }}
-            />
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-            <div>
-              <label style={{ display: "block", ...fr(500, "12px"), color: "var(--text-light)", marginBottom: "6px" }}>Durasi (dtk)</label>
-              <input
-                type="number" min={1} max={60} value={defaultDuration}
-                onChange={(e) => { const v = Number(e.target.value); setDefaultDuration(v); debounceSave({ defaultDuration: v }); }}
-                style={{ width: "100%", padding: "10px", border: "1px solid var(--border)", borderRadius: "8px", ...fr(400, "13px"), background: "var(--bg-light)", color: "var(--text-dark)" }}
-              />
-            </div>
-            <div>
-              <label style={{ display: "block", ...fr(500, "12px"), color: "var(--text-light)", marginBottom: "6px" }}>Jeda (dtk)</label>
-              <input
-                type="number" min={0} max={10} value={defaultGap}
-                onChange={(e) => { const v = Number(e.target.value); setDefaultGap(v); debounceSave({ defaultGap: v }); }}
-                style={{ width: "100%", padding: "10px", border: "1px solid var(--border)", borderRadius: "8px", ...fr(400, "13px"), background: "var(--bg-light)", color: "var(--text-dark)" }}
-              />
-            </div>
-          </div>
-
-          <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
-            <input
-              type="checkbox" checked={shuffleEnabled}
-              onChange={(e) => { setShuffleEnabled(e.target.checked); saveSettings({ shuffleEnabled: e.target.checked }); }}
-            />
-            <span style={{ ...fr(500, "13px"), color: "var(--text-dark)" }}>Acak urutan slide</span>
-          </label>
-
-          <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
-            <input
-              type="checkbox" checked={showSecondsTimer}
-              onChange={(e) => { setShowSecondsTimer(e.target.checked); saveSettings({ showSecondsTimer: e.target.checked }); }}
-            />
-            <span style={{ ...fr(500, "13px"), color: "var(--text-dark)" }}>Tampilkan timer hitungan mundur</span>
-          </label>
-
-          {isActive && (
-            <div style={{ borderTop: "1px solid var(--border)", paddingTop: "16px" }}>
-              <p style={{ ...fr(500, "12px"), color: "var(--text-light)", marginBottom: "8px" }}>Link Murid</p>
-              <div style={{ background: "var(--bg-light)", borderRadius: "8px", padding: "8px 10px", marginBottom: "8px" }}>
-                <span style={{ ...fr(400, "11px"), color: "var(--text-dark)", wordBreak: "break-all" }}>{studentUrl}</span>
-              </div>
-              <button
-                onClick={() => { navigator.clipboard.writeText(studentUrl); showToast("Link disalin!"); }}
-                style={{ width: "100%", padding: "8px", background: "var(--primary)", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", ...fr(600, "12px") }}
-              >
-                Salin Link
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Slides panel */}
         <div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
             <h2 style={{ ...fr(600, "15px"), color: "var(--text-dark)", margin: 0 }}>Slide ({sorted.length})</h2>
@@ -301,76 +247,22 @@ export default function SessionEditorPage({ params }: { params: Promise<{ id: st
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               {sorted.map((slide, idx) => (
-                <div
+                <SlideCard
                   key={slide.id}
-                  style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "10px", padding: "14px 16px", display: "flex", alignItems: "center", gap: "12px" }}
-                >
-                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                    <button
-                      onClick={() => moveSlide(idx, -1)}
-                      disabled={idx === 0}
-                      style={{ padding: "2px 8px", background: "var(--bg-light)", border: "1px solid var(--border)", borderRadius: "4px", cursor: idx === 0 ? "not-allowed" : "pointer", opacity: idx === 0 ? 0.3 : 1, ...fr(500, "12px") }}
-                    >▲</button>
-                    <button
-                      onClick={() => moveSlide(idx, 1)}
-                      disabled={idx === sorted.length - 1}
-                      style={{ padding: "2px 8px", background: "var(--bg-light)", border: "1px solid var(--border)", borderRadius: "4px", cursor: idx === sorted.length - 1 ? "not-allowed" : "pointer", opacity: idx === sorted.length - 1 ? 0.3 : 1, ...fr(500, "12px") }}
-                    >▼</button>
-                  </div>
-
-                  <span style={{ ...fr(500, "12px"), color: "var(--text-light)", minWidth: "24px", textAlign: "center" }}>{idx + 1}</span>
-
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                      <span style={{
-                        padding: "2px 8px", borderRadius: "4px", ...fr(600, "11px"),
-                        background: slide.type === "text" ? "rgba(91,141,238,0.12)" : "rgba(107,207,127,0.12)",
-                        color: slide.type === "text" ? "var(--primary)" : "var(--accent)",
-                      }}>
-                        {slide.type === "text" ? "TEKS" : "GAMBAR"}
-                      </span>
-                      {(slide.customDuration != null || slide.customGap != null) && (
-                        <span style={{ ...fr(400, "11px"), color: "var(--text-light)" }}>
-                          {slide.customDuration != null ? `${slide.customDuration}dtk` : ""}
-                          {slide.customGap != null ? ` · jeda ${slide.customGap}dtk` : ""}
-                        </span>
-                      )}
-                    </div>
-                    {slide.type === "text" ? (
-                      <p style={{ ...fr(500, "14px"), color: "var(--text-dark)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {slide.contentText}
-                      </p>
-                    ) : (
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={slide.imageUrl} alt={slide.imageLabel ?? ""} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "4px", border: "1px solid var(--border)" }} />
-                        <span style={{ ...fr(400, "13px"), color: "var(--text-light)" }}>{slide.imageLabel || "Tanpa label"}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
-                    <button
-                      onClick={() => openEditSlide(slide)}
-                      style={{ padding: "6px 12px", background: "var(--bg-light)", border: "1px solid var(--border)", borderRadius: "6px", cursor: "pointer", ...fr(500, "12px"), color: "var(--text-dark)" }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => deleteSlide(slide.id)}
-                      style={{ padding: "6px 12px", background: "transparent", border: "1px solid var(--danger)", borderRadius: "6px", cursor: "pointer", ...fr(500, "12px"), color: "var(--danger)" }}
-                    >
-                      Hapus
-                    </button>
-                  </div>
-                </div>
+                  slide={slide}
+                  index={idx}
+                  total={sorted.length}
+                  onMoveUp={() => moveSlide(idx, -1)}
+                  onMoveDown={() => moveSlide(idx, 1)}
+                  onEdit={() => openEditSlide(slide)}
+                  onDelete={() => deleteSlide(slide.id)}
+                />
               ))}
             </div>
           )}
         </div>
       </div>
 
-      {/* Slide modal */}
       {showSlideModal && (
         <div className="modal-overlay" onClick={() => setShowSlideModal(false)}>
           <div

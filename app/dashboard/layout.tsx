@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getTeacherId } from "@/lib/auth";
 import { store } from "@/lib/store";
 import LogoutButton from "./LogoutButton";
+import DarkModeToggle from "@/components/teacher/DarkModeToggle";
 
 const fc = (w: number | string, s: string): React.CSSProperties => ({
   fontFamily: "var(--font-comfortaa), cursive", fontWeight: w, fontSize: s,
@@ -30,6 +31,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <span style={{ ...fr(400, "14px"), color: "var(--text-light)" }}>
             {teacher?.name ?? "Pengajar"}
           </span>
+          <DarkModeToggle />
           <LogoutButton />
         </div>
       </header>

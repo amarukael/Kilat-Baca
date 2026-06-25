@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Readable } from "stream";
 import { randomUUID } from "crypto";
 import { requireTeacherId } from "@/lib/auth";
-import { drive, DRIVE_FOLDER_ID } from "@/lib/gdrive";
+import { drive, DRIVE_FOLDER_ID } from "@/lib/googleDrive";
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 const ALLOWED: Record<string, string> = {
