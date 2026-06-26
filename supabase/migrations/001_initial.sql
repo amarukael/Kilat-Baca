@@ -63,13 +63,14 @@ create table if not exists kilat_baca.slides (
 -- so different Google Cloud projects can be used per teacher account.
 
 create table if not exists kilat_baca.drive_config (
-  email          text primary key,
+  id             integer primary key default 1,
   client_id      text not null,
   client_secret  text not null,
   access_token   text,
   refresh_token  text,
   token_info     jsonb,
-  updated_at     timestamptz not null default now()
+  updated_at     timestamptz not null default now(),
+  constraint drive_config_single_row check (id = 1)
 );
 
 -- ── Indexes ──────────────────────────────────────────────────────────────────

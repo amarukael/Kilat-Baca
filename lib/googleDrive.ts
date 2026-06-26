@@ -5,7 +5,6 @@ import type { DriveConfig } from "./types";
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 export const DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID!;
-const FALLBACK_EMAIL = process.env.GOOGLE_DRIVE_FALLBACK_EMAIL!;
 
 // ── OAuth2 Client ─────────────────────────────────────────────────────────────
 
@@ -16,7 +15,6 @@ function createOAuth2Client(clientId: string, clientSecret: string) {
 // ── Store Drive Config ────────────────────────────────────────────────────────
 
 export async function storeDriveConfig(
-  email: string,
   accessToken: string,
   refreshToken: string | null | undefined,
   tokenInfo: object
@@ -24,7 +22,6 @@ export async function storeDriveConfig(
   const { error } = await supabase
     .from("drive_config")
     .upsert({
-      email: email.toLowerCase(),
       access_token: accessToken,
       refresh_token: refreshToken ?? null,
       token_info: tokenInfo,
@@ -36,13 +33,11 @@ export async function storeDriveConfig(
 
 // ── Get Drive Config ──────────────────────────────────────────────────────────
 
-export async function getDriveConfig(email: string): Promise<DriveConfig | undefined> {
+export async function getDriveConfig(): Promise<DriveConfig | undefined> {
   const { data } = await supabase
     .from("drive_config")
     .select()
-    .eq("email", email.toLowerCase())
     .single<{
-      email: string;
       client_id: string;
       client_secret: string;
       access_token: string | null;
@@ -54,7 +49,6 @@ export async function getDriveConfig(email: string): Promise<DriveConfig | undef
   if (!data) return undefined;
 
   return {
-    email: data.email,
     clientId: data.client_id,
     clientSecret: data.client_secret,
     accessToken: data.access_token,
@@ -94,7 +88,6 @@ async function refreshAccessToken(config: DriveConfig): Promise<DriveConfig> {
   }
 
   await storeDriveConfig(
-    config.email,
     credentials.access_token,
     credentials.refresh_token ?? config.refreshToken,
     credentials as object
@@ -111,10 +104,9 @@ async function refreshAccessToken(config: DriveConfig): Promise<DriveConfig> {
 
 // ── Get Access Token (no Drive client needed) ─────────────────────────────────
 // Used by proxy endpoints that only need a Bearer token (e.g. file proxy).
-// Always uses FALLBACK_EMAIL since all files live in the same Drive account.
 
 export async function getAccessToken(): Promise<string> {
-  let config = await getDriveConfig(FALLBACK_EMAIL);
+  let config = await getDriveConfig();
 
   if (!config) {
     throw new Error(
@@ -130,20 +122,13 @@ export async function getAccessToken(): Promise<string> {
 }
 
 // ── Get Drive Client ──────────────────────────────────────────────────────────
-// Resolves an authenticated Drive client for the given teacher email.
-// Priority: teacher config → fallback email config.
+// Resolves an authenticated Drive client using the single drive_config row.
 // Logic:
 //   1. If access token is still valid  → use it directly.
 //   2. If access token is expired      → refresh silently and persist new token.
-//   3. If a Drive operation fails with 401 → refresh and retry once.
 
-export async function getDriveClient(teacherEmail: string) {
-  // Try teacher-specific config first, then fall back to default email
-  let config = await getDriveConfig(teacherEmail);
-
-  if (!config) {
-    config = await getDriveConfig(FALLBACK_EMAIL);
-  }
+export async function getDriveClient(_teacherEmail?: string) {
+  let config = await getDriveConfig();
 
   if (!config) {
     throw new Error(
@@ -165,7 +150,6 @@ export async function getDriveClient(teacherEmail: string) {
   // Persist any token the library auto-refreshes during a request
   oauth2Client.on("tokens", async (tokens: { access_token?: string | null; refresh_token?: string | null }) => {
     await storeDriveConfig(
-      config!.email,
       tokens.access_token ?? config!.accessToken!,
       tokens.refresh_token ?? config!.refreshToken,
       tokens as object
