@@ -58,7 +58,6 @@ export interface PublicSlide {
 
 // Drive OAuth configuration per teacher
 export interface DriveConfig {
-  email: string;
   clientId: string;
   clientSecret: string;
   accessToken: string | null;

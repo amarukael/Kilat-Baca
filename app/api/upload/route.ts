@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
 
     try {
       logger.info("Authentication", "Memverifikasi teacher");
-      teacherId = await requireTeacherId(req);
+      teacherId = await requireTeacherId();
       logger.info("Authentication", "Teacher terverifikasi", { teacherId });
 
       logger.info("Database", "Fetching teacher data", { teacherId });
