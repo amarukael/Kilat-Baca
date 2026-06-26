@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { generateTraceId } from "./lib/logger";
 
 const SESSION_COOKIE = "mctk_auth";
 
 export function middleware(req: NextRequest) {
   const token = req.cookies.get(SESSION_COOKIE)?.value;
   const { pathname } = req.nextUrl;
+
+  // Generate traceId untuk setiap request
+  const traceId = generateTraceId();
 
   // Protect /dashboard — redirect to /login if no session cookie
   if (pathname.startsWith("/dashboard") && !token) {
@@ -16,7 +20,11 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
-  return NextResponse.next();
+  // Add traceId to request headers
+  const response = NextResponse.next();
+  response.headers.set("x-trace-id", traceId);
+
+  return response;
 }
 
 export const config = {
