@@ -9,6 +9,7 @@ export function useDarkMode() {
     const stored = localStorage.getItem("theme");
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const initial = stored ? stored === "dark" : prefersDark;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDark(initial);
     document.documentElement.classList.toggle("dark", initial);
   }, []);

@@ -2,6 +2,7 @@ export interface Teacher {
   id: string;
   email: string;
   name: string;
+  status: "pending" | "active" | "rejected";
   createdAt: string;
 }
 

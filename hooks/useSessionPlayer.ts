@@ -19,6 +19,8 @@ export function useSessionPlayer(session: PublicSession | null) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState<PublicSlide | undefined>(undefined);
+  const [totalSlides, setTotalSlides] = useState(0);
 
   const playSlidesRef = useRef<PublicSlide[]>([]);
   const showSlideRef = useRef<(idx: number) => void>(null!);
@@ -36,11 +38,13 @@ export function useSessionPlayer(session: PublicSession | null) {
       clearTimers();
       setPhase("done");
       setCurrentIndex(0);
+      setCurrentSlide(undefined);
       return;
     }
 
     const slide = slides[idx];
     setCurrentIndex(idx);
+    setCurrentSlide(slide);
     setPhase("playing");
     setSecondsLeft(slide.duration);
     clearTimers();
@@ -68,12 +72,11 @@ export function useSessionPlayer(session: PublicSession | null) {
     }, slide.duration * 1000);
   }, []);
 
-  showSlideRef.current = showSlide;
-
   const startSession = useCallback(() => {
     if (!session) return;
     const slides = session.shuffleEnabled ? fisherYates(session.slides) : [...session.slides];
     playSlidesRef.current = slides;
+    setTotalSlides(slides.length);
     showSlideRef.current(0);
   }, [session]);
 
@@ -81,8 +84,14 @@ export function useSessionPlayer(session: PublicSession | null) {
     clearTimers();
     setPhase("idle");
     setCurrentIndex(0);
+    setCurrentSlide(undefined);
+    setTotalSlides(0);
     playSlidesRef.current = [];
   }, []);
+
+  useEffect(() => {
+    showSlideRef.current = showSlide;
+  });
 
   useEffect(() => () => clearTimers(), []);
 
@@ -105,8 +114,8 @@ export function useSessionPlayer(session: PublicSession | null) {
     currentIndex,
     secondsLeft,
     isFullscreen,
-    currentSlide: playSlidesRef.current[currentIndex] as PublicSlide | undefined,
-    totalSlides: playSlidesRef.current.length,
+    currentSlide,
+    totalSlides,
     startSession,
     stopSession,
     toggleFullscreen,

@@ -2,9 +2,7 @@
 
 import type { Slide } from "@/lib/types";
 
-const fr = (w: number | string, s: string): React.CSSProperties => ({
-  fontFamily: "var(--font-raleway), sans-serif", fontWeight: w, fontSize: s,
-});
+import { fr } from "@/lib/styles";
 
 interface Props {
   slide: Slide;

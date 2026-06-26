@@ -7,14 +7,9 @@ const logger = new Logger("api/slides/[id]/route.ts");
 
 type Params = Promise<{ id: string }>;
 
-// Find which session owns this slide and verify teacher owns it
+// Find which session owns this slide and verify teacher owns it — direct DB query
 async function findSlideOwner(teacherId: string, slideId: string) {
-  const sessions = await store.getSessionsByTeacher(teacherId);
-  for (const session of sessions) {
-    const slide = session.slides.find((s) => s.id === slideId);
-    if (slide) return { session, slide };
-  }
-  return null;
+  return store.getSlideWithSession(slideId, teacherId);
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Params }) {

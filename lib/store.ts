@@ -1,6 +1,13 @@
 import { supabase } from "./supabase";
 import type { Teacher, Session, Slide } from "./types";
 
+// ── Internal types ────────────────────────────────────────────────────────────
+
+/** Teacher dengan passwordHash — hanya dipakai internal di store, tidak diekspos ke luar. */
+interface TeacherWithPassword extends Teacher {
+  passwordHash: string;
+}
+
 // ── DB row types (snake_case from Postgres) ──────────────────────────────────
 
 interface TeacherRow {
@@ -8,6 +15,7 @@ interface TeacherRow {
   email: string;
   name: string;
   password_hash: string;
+  status: "pending" | "active" | "rejected";
   created_at: string;
 }
 
@@ -42,7 +50,7 @@ interface SlideRow {
 // ── Mappers ──────────────────────────────────────────────────────────────────
 
 function toTeacher(row: TeacherRow): Teacher {
-  return { id: row.id, email: row.email, name: row.name, createdAt: row.created_at };
+  return { id: row.id, email: row.email, name: row.name, status: row.status, createdAt: row.created_at };
 }
 
 function toSlide(row: SlideRow): Slide {
@@ -86,7 +94,7 @@ export const store = {
   async createTeacher(email: string, passwordHash: string, name: string): Promise<Teacher> {
     const { data, error } = await supabase
       .from("teachers")
-      .insert({ email, name, password_hash: passwordHash })
+      .insert({ email, name, password_hash: passwordHash, status: "pending" })
       .select()
       .single<TeacherRow>();
     if (error) {
@@ -96,14 +104,40 @@ export const store = {
     return toTeacher(data);
   },
 
-  async getTeacherByEmail(email: string): Promise<(TeacherRow & { passwordHash: string }) | undefined> {
+  async getTeacherById(id: string): Promise<Teacher | undefined> {
+    const { data } = await supabase
+      .from("teachers")
+      .select()
+      .eq("id", id)
+      .single<TeacherRow>();
+    if (!data) return undefined;
+    return toTeacher(data);
+  },
+
+  async approveTeacher(id: string): Promise<boolean> {
+    const { error } = await supabase
+      .from("teachers")
+      .update({ status: "active" })
+      .eq("id", id);
+    return !error;
+  },
+
+  async rejectTeacher(id: string): Promise<boolean> {
+    const { error } = await supabase
+      .from("teachers")
+      .update({ status: "rejected" })
+      .eq("id", id);
+    return !error;
+  },
+
+  async getTeacherByEmail(email: string): Promise<TeacherWithPassword | undefined> {
     const { data } = await supabase
       .from("teachers")
       .select()
       .eq("email", email.toLowerCase())
       .single<TeacherRow>();
     if (!data) return undefined;
-    return { ...data, passwordHash: data.password_hash };
+    return { ...toTeacher(data), passwordHash: data.password_hash };
   },
 
   async getTeacher(id: string): Promise<Teacher | undefined> {
@@ -332,5 +366,37 @@ export const store = {
       )
     );
     return true;
+  },
+
+  /**
+   * Direct query untuk verifikasi ownership slide.
+   * Lebih efisien dari getSessionsByTeacher — tidak perlu load semua session.
+   * Return { session, slide } jika slide ditemukan dan dimiliki teacher, null jika tidak.
+   */
+  async getSlideWithSession(
+    slideId: string,
+    teacherId: string,
+  ): Promise<{ session: Session; slide: Slide } | null> {
+    const { data: slideRow } = await supabase
+      .from("slides")
+      .select("*, sessions!inner(*, teachers!inner(id))")
+      .eq("id", slideId)
+      .eq("sessions.teacher_id", teacherId)
+      .single<SlideRow & { sessions: SessionRow }>();
+
+    if (!slideRow) return null;
+
+    const sessionRow = slideRow.sessions;
+    // Ambil semua slides untuk session agar bisa return Session lengkap
+    const { data: allSlides } = await supabase
+      .from("slides")
+      .select()
+      .eq("session_id", sessionRow.id)
+      .order("order_index")
+      .returns<SlideRow[]>();
+
+    const session = toSession(sessionRow, allSlides ?? []);
+    const slide = toSlide(slideRow);
+    return { session, slide };
   },
 };

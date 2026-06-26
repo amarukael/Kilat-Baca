@@ -8,9 +8,7 @@ import GapScreen from "@/components/student/GapScreen";
 import SlideRenderer from "@/components/student/SlideRenderer";
 import ReadingTimer from "@/components/student/ReadingTimer";
 
-const fr = (w: number | string, s: string): React.CSSProperties => ({
-  fontFamily: "var(--font-raleway), sans-serif", fontWeight: w, fontSize: s,
-});
+import { fr } from "@/lib/styles";
 
 // Force light mode on student view — override html.dark variables
 const LIGHT_VARS: React.CSSProperties = {
