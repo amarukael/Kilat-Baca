@@ -14,6 +14,7 @@ export default function LogoutButton() {
   };
   return (
     <button
+      data-testid="logout-button"
       onClick={logout}
       style={{ padding: "8px 16px", background: "transparent", border: "1px solid var(--border)", borderRadius: "8px", cursor: "pointer", ...fr(500, "13px"), color: "var(--text-dark)" }}
     >

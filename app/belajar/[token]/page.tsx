@@ -53,7 +53,7 @@ export default function StudentPage({ params }: { params: Promise<{ token: strin
 
   if (loading) {
     return (
-      <div style={{ ...LIGHT_VARS, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-light)" }}>
+      <div data-testid="student-loading" style={{ ...LIGHT_VARS, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-light)" }}>
         <span style={{ ...fr(400, "16px"), color: "var(--text-light)" }}>Memuat sesi...</span>
       </div>
     );
@@ -61,7 +61,7 @@ export default function StudentPage({ params }: { params: Promise<{ token: strin
 
   if (error || !session) {
     return (
-      <div style={{ ...LIGHT_VARS, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-light)", flexDirection: "column", gap: "16px", padding: "24px" }}>
+      <div data-testid="student-error" style={{ ...LIGHT_VARS, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-light)", flexDirection: "column", gap: "16px", padding: "24px" }}>
         <div style={{ fontSize: "64px" }}>😕</div>
         <p style={{ ...fr(500, "16px"), color: "var(--text-dark)", textAlign: "center" }}>{error || "Sesi tidak tersedia."}</p>
       </div>
@@ -77,19 +77,21 @@ export default function StudentPage({ params }: { params: Promise<{ token: strin
   }
 
   return (
-    <div style={{ ...LIGHT_VARS, position: "fixed", inset: 0, background: phase === "gap" ? "var(--bg-light)" : "var(--bg-card)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+    <div data-testid="student-player" style={{ ...LIGHT_VARS, position: "fixed", inset: 0, background: phase === "gap" ? "var(--bg-light)" : "var(--bg-card)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px" }}>
         <button
+          data-testid="player-stop-button"
           onClick={stopSession}
           style={{ padding: "8px 16px", background: "rgba(0,0,0,0.06)", border: "none", borderRadius: "8px", cursor: "pointer", ...fr(500, "13px"), color: "var(--text-dark)" }}
         >
           ✕ Berhenti
         </button>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <span style={{ ...fr(400, "13px"), color: "var(--text-light)" }}>
+          <span data-testid="player-slide-counter" style={{ ...fr(400, "13px"), color: "var(--text-light)" }}>
             {currentIndex + 1} / {totalSlides}
           </span>
           <button
+            data-testid="player-fullscreen-button"
             onClick={toggleFullscreen}
             style={{ padding: "8px 12px", background: "rgba(0,0,0,0.06)", border: "none", borderRadius: "8px", cursor: "pointer", ...fr(500, "13px"), color: "var(--text-dark)" }}
           >

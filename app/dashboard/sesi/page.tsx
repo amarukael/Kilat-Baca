@@ -39,6 +39,7 @@ export default function NewSessionPage() {
   return (
     <div style={{ maxWidth: "480px", margin: "0 auto", paddingTop: "40px" }}>
       <button
+        data-testid="new-session-back-button"
         onClick={() => router.push("/dashboard")}
         style={{ marginBottom: "24px", padding: "8px 14px", background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "8px", cursor: "pointer", ...fr(500, "13px"), color: "var(--text-dark)" }}
       >
@@ -48,12 +49,13 @@ export default function NewSessionPage() {
       <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "16px", padding: "32px" }}>
         <h1 style={{ ...fc(700, "22px"), color: "var(--text-dark)", marginBottom: "24px" }}>Buat Sesi Baru</h1>
 
-        <form onSubmit={createSession}>
+        <form data-testid="new-session-form" onSubmit={createSession}>
           <div style={{ marginBottom: "20px" }}>
             <label style={{ display: "block", ...fr(500, "13px"), color: "var(--text-light)", marginBottom: "8px" }}>
               Nama Sesi
             </label>
             <input
+              data-testid="new-session-title-input"
               autoFocus
               type="text"
               required
@@ -70,6 +72,7 @@ export default function NewSessionPage() {
 
           <div style={{ display: "flex", gap: "12px" }}>
             <button
+              data-testid="new-session-cancel-button"
               type="button"
               onClick={() => router.push("/dashboard")}
               style={{ flex: 1, padding: "12px", background: "var(--bg-light)", border: "1px solid var(--border)", borderRadius: "8px", cursor: "pointer", ...fr(500, "14px"), color: "var(--text-dark)" }}
@@ -77,6 +80,7 @@ export default function NewSessionPage() {
               Batal
             </button>
             <button
+              data-testid="new-session-submit-button"
               type="submit"
               disabled={creating}
               style={{ flex: 1, padding: "12px", background: "var(--primary)", color: "white", border: "none", borderRadius: "8px", cursor: creating ? "not-allowed" : "pointer", ...fr(600, "14px"), opacity: creating ? 0.7 : 1 }}

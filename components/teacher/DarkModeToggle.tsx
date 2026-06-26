@@ -10,6 +10,7 @@ export default function DarkModeToggle() {
   const { dark, toggle } = useDarkMode();
   return (
     <button
+      data-testid="dark-mode-toggle"
       onClick={toggle}
       title={dark ? "Mode terang" : "Mode gelap"}
       style={{ padding: "6px 12px", background: "var(--bg-light)", border: "1px solid var(--border)", borderRadius: "8px", cursor: "pointer", ...fr(500, "13px"), color: "var(--text-dark)" }}

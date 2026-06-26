@@ -18,13 +18,15 @@ interface Props {
 
 export default function SlideCard({ slide, index, total, onMoveUp, onMoveDown, onEdit, onDelete }: Props) {
   return (
-    <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "10px", padding: "14px 16px", display: "flex", alignItems: "center", gap: "12px" }}>
+    <div data-testid="slide-card" style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "10px", padding: "14px 16px", display: "flex", alignItems: "center", gap: "12px" }}>
       <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
         <button
+          data-testid="slide-card-move-up"
           onClick={onMoveUp} disabled={index === 0}
           style={{ padding: "2px 8px", background: "var(--bg-light)", border: "1px solid var(--border)", borderRadius: "4px", cursor: index === 0 ? "not-allowed" : "pointer", opacity: index === 0 ? 0.3 : 1, ...fr(500, "12px") }}
         >▲</button>
         <button
+          data-testid="slide-card-move-down"
           onClick={onMoveDown} disabled={index === total - 1}
           style={{ padding: "2px 8px", background: "var(--bg-light)", border: "1px solid var(--border)", borderRadius: "4px", cursor: index === total - 1 ? "not-allowed" : "pointer", opacity: index === total - 1 ? 0.3 : 1, ...fr(500, "12px") }}
         >▼</button>
@@ -63,10 +65,12 @@ export default function SlideCard({ slide, index, total, onMoveUp, onMoveDown, o
 
       <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
         <button
+          data-testid="slide-card-edit-button"
           onClick={onEdit}
           style={{ padding: "6px 12px", background: "var(--bg-light)", border: "1px solid var(--border)", borderRadius: "6px", cursor: "pointer", ...fr(500, "12px"), color: "var(--text-dark)" }}
         >Edit</button>
         <button
+          data-testid="slide-card-delete-button"
           onClick={onDelete}
           style={{ padding: "6px 12px", background: "transparent", border: "1px solid var(--danger)", borderRadius: "6px", cursor: "pointer", ...fr(500, "12px"), color: "var(--danger)" }}
         >Hapus</button>

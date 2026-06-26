@@ -193,6 +193,7 @@ export default function SessionEditorPage({ params }: { params: Promise<{ id: st
     <>
       <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "28px" }}>
         <button
+          data-testid="editor-back-button"
           onClick={() => router.push("/dashboard")}
           style={{ padding: "8px 14px", background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "8px", cursor: "pointer", ...fr(500, "13px"), color: "var(--text-dark)" }}
         >
@@ -200,6 +201,7 @@ export default function SessionEditorPage({ params }: { params: Promise<{ id: st
         </button>
         <h1 style={{ ...fc(700, "22px"), color: "var(--text-dark)", margin: 0, flex: 1 }}>{title}</h1>
         <span
+          data-testid="editor-toggle-active"
           onClick={async () => { await saveSettings({ isActive: !isActive }); setIsActive(!isActive); }}
           style={{
             cursor: "pointer", padding: "6px 14px", borderRadius: "20px", ...fr(600, "13px"),
@@ -232,6 +234,7 @@ export default function SessionEditorPage({ params }: { params: Promise<{ id: st
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
             <h2 style={{ ...fr(600, "15px"), color: "var(--text-dark)", margin: 0 }}>Slide ({sorted.length})</h2>
             <button
+              data-testid="add-slide-button"
               onClick={openAddSlide}
               style={{ padding: "8px 16px", background: "var(--accent)", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", ...fr(600, "13px") }}
             >
@@ -264,20 +267,22 @@ export default function SessionEditorPage({ params }: { params: Promise<{ id: st
       </div>
 
       {showSlideModal && (
-        <div className="modal-overlay" onClick={() => setShowSlideModal(false)}>
+        <div data-testid="slide-modal-overlay" className="modal-overlay" onClick={() => setShowSlideModal(false)}>
           <div
+            data-testid="slide-modal"
             onClick={(e) => e.stopPropagation()}
             style={{ background: "var(--bg-card)", borderRadius: "16px", padding: "32px", width: "100%", maxWidth: "480px", maxHeight: "90vh", overflowY: "auto" }}
           >
             <h2 style={{ ...fc(700, "18px"), color: "var(--text-dark)", marginBottom: "20px" }}>
               {editingSlide ? "Edit Slide" : "Tambah Slide"}
             </h2>
-            <form onSubmit={saveSlide}>
+            <form data-testid="slide-form" onSubmit={saveSlide}>
               {!editingSlide && (
                 <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
                   {(["text", "image"] as const).map((t) => (
                     <button
                       key={t} type="button"
+                      data-testid={`slide-type-button-${t}`}
                       onClick={() => setSlideForm((prev) => ({ ...prev, type: t }))}
                       style={{
                         flex: 1, padding: "10px", border: `2px solid ${slideForm.type === t ? "var(--primary)" : "var(--border)"}`,
@@ -296,6 +301,7 @@ export default function SessionEditorPage({ params }: { params: Promise<{ id: st
                 <div style={{ marginBottom: "16px" }}>
                   <label style={{ display: "block", ...fr(500, "12px"), color: "var(--text-light)", marginBottom: "6px" }}>Teks Slide</label>
                   <textarea
+                    data-testid="slide-text-input"
                     required value={slideForm.contentText}
                     onChange={(e) => setSlideForm((prev) => ({ ...prev, contentText: e.target.value }))}
                     rows={3}
@@ -314,6 +320,7 @@ export default function SessionEditorPage({ params }: { params: Promise<{ id: st
                       onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); }}
                     />
                     <button
+                      data-testid="slide-upload-button"
                       type="button" onClick={() => fileInputRef.current?.click()} disabled={uploadLoading}
                       style={{ width: "100%", padding: "10px", background: "var(--bg-light)", border: "1px dashed var(--border)", borderRadius: "8px", cursor: "pointer", ...fr(500, "13px"), color: "var(--text-light)" }}
                     >
@@ -323,6 +330,7 @@ export default function SessionEditorPage({ params }: { params: Promise<{ id: st
                   <div style={{ marginBottom: "16px" }}>
                     <label style={{ display: "block", ...fr(500, "12px"), color: "var(--text-light)", marginBottom: "6px" }}>Label Gambar (opsional)</label>
                     <input
+                      data-testid="slide-image-label-input"
                       type="text" value={slideForm.imageLabel}
                       onChange={(e) => setSlideForm((prev) => ({ ...prev, imageLabel: e.target.value }))}
                       placeholder="Misal: Huruf A, Apel"
@@ -336,6 +344,7 @@ export default function SessionEditorPage({ params }: { params: Promise<{ id: st
                 <div>
                   <label style={{ display: "block", ...fr(500, "12px"), color: "var(--text-light)", marginBottom: "6px" }}>Durasi khusus (dtk)</label>
                   <input
+                    data-testid="slide-custom-duration-input"
                     type="number" min={1} max={60} value={slideForm.customDuration}
                     onChange={(e) => setSlideForm((prev) => ({ ...prev, customDuration: e.target.value }))}
                     placeholder={`Default: ${defaultDuration}dtk`}
@@ -345,6 +354,7 @@ export default function SessionEditorPage({ params }: { params: Promise<{ id: st
                 <div>
                   <label style={{ display: "block", ...fr(500, "12px"), color: "var(--text-light)", marginBottom: "6px" }}>Jeda khusus (dtk)</label>
                   <input
+                    data-testid="slide-custom-gap-input"
                     type="number" min={0} max={10} value={slideForm.customGap}
                     onChange={(e) => setSlideForm((prev) => ({ ...prev, customGap: e.target.value }))}
                     placeholder={`Default: ${defaultGap}dtk`}
@@ -355,12 +365,14 @@ export default function SessionEditorPage({ params }: { params: Promise<{ id: st
 
               <div style={{ display: "flex", gap: "12px" }}>
                 <button
+                  data-testid="slide-modal-cancel-button"
                   type="button" onClick={() => setShowSlideModal(false)}
                   style={{ flex: 1, padding: "12px", background: "var(--bg-light)", border: "1px solid var(--border)", borderRadius: "8px", cursor: "pointer", ...fr(500, "14px"), color: "var(--text-dark)" }}
                 >
                   Batal
                 </button>
                 <button
+                  data-testid="slide-modal-save-button"
                   type="submit" disabled={slideSaving || (slideForm.type === "image" && !slideForm.imageUrl)}
                   style={{ flex: 1, padding: "12px", background: "var(--primary)", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", ...fr(600, "14px"), opacity: slideSaving ? 0.7 : 1 }}
                 >

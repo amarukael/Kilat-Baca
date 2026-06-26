@@ -37,7 +37,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{ background: "var(--bg-card)", borderRadius: "16px", padding: "40px", width: "100%", maxWidth: "400px", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}>
+    <div data-testid="login-container" style={{ background: "var(--bg-card)", borderRadius: "16px", padding: "40px", width: "100%", maxWidth: "400px", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}>
       <h1 style={{ ...fc(700, "28px"), color: "var(--text-dark)", marginBottom: "8px", textAlign: "center" }}>
         📚 Membaca Cepat TK
       </h1>
@@ -45,12 +45,13 @@ export default function LoginPage() {
         Masuk ke panel pengajar
       </p>
 
-      <form onSubmit={submit}>
+      <form data-testid="login-form" onSubmit={submit}>
         <div style={{ marginBottom: "16px" }}>
           <label style={{ display: "block", ...fr(600, "14px"), marginBottom: "8px", color: "var(--text-dark)" }}>
             Email
           </label>
           <input
+            data-testid="login-email-input"
             type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
             placeholder="guru@sekolah.id"
             style={{ width: "100%", padding: "12px", border: "2px solid var(--border)", borderRadius: "8px", ...fr(400, "14px"), background: "var(--bg-light)", color: "var(--text-dark)" }}
@@ -61,6 +62,7 @@ export default function LoginPage() {
             Password
           </label>
           <input
+            data-testid="login-password-input"
             type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
             style={{ width: "100%", padding: "12px", border: "2px solid var(--border)", borderRadius: "8px", ...fr(400, "14px"), background: "var(--bg-light)", color: "var(--text-dark)" }}
@@ -68,12 +70,13 @@ export default function LoginPage() {
         </div>
 
         {error && (
-          <div style={{ padding: "12px", background: "rgba(255,120,117,0.1)", border: "1px solid var(--danger)", borderRadius: "8px", ...fr(500, "13px"), color: "var(--danger)", marginBottom: "16px" }}>
+          <div data-testid="login-error" style={{ padding: "12px", background: "rgba(255,120,117,0.1)", border: "1px solid var(--danger)", borderRadius: "8px", ...fr(500, "13px"), color: "var(--danger)", marginBottom: "16px" }}>
             {error}
           </div>
         )}
 
         <button
+          data-testid="login-submit-button"
           type="submit" disabled={loading}
           style={{ width: "100%", padding: "14px", background: "var(--primary)", color: "white", border: "none", borderRadius: "8px", cursor: loading ? "not-allowed" : "pointer", ...fr(600, "15px"), opacity: loading ? 0.7 : 1 }}
         >
@@ -83,7 +86,7 @@ export default function LoginPage() {
 
       <p style={{ ...fr(400, "13px"), color: "var(--text-light)", textAlign: "center", marginTop: "20px" }}>
         Belum punya akun?{" "}
-        <a href="/register" style={{ color: "var(--primary)", fontWeight: 600, textDecoration: "none" }}>
+        <a data-testid="login-register-link" href="/register" style={{ color: "var(--primary)", fontWeight: 600, textDecoration: "none" }}>
           Daftar sekarang
         </a>
       </p>

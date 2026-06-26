@@ -72,6 +72,7 @@ export default function DashboardPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "28px" }}>
         <h1 style={{ ...fc(700, "24px"), color: "var(--text-dark)", margin: 0 }}>Sesi Pembelajaran</h1>
         <button
+          data-testid="create-session-button"
           onClick={() => router.push("/dashboard/sesi")}
           style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px", background: "var(--primary)", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", ...fr(600, "14px") }}
         >
@@ -94,6 +95,7 @@ export default function DashboardPage() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <h3 style={{ ...fr(600, "16px"), color: "var(--text-dark)", margin: 0, flex: 1, marginRight: "12px" }}>{s.title}</h3>
                 <span
+                  data-testid="session-toggle-active-button"
                   onClick={() => toggleActive(s)}
                   style={{
                     cursor: "pointer", padding: "4px 10px", borderRadius: "20px", ...fr(500, "12px"),
@@ -118,6 +120,7 @@ export default function DashboardPage() {
                     {studentUrl(s.shareToken)}
                   </span>
                   <button
+                    data-testid="session-copy-link-button"
                     onClick={() => { navigator.clipboard.writeText(studentUrl(s.shareToken)); showToast("Link disalin!"); }}
                     style={{ padding: "4px 10px", background: "var(--primary)", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", ...fr(500, "11px"), flexShrink: 0 }}
                   >
@@ -128,12 +131,14 @@ export default function DashboardPage() {
 
               <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
                 <button
+                  data-testid="session-edit-button"
                   onClick={() => router.push(`/dashboard/sesi/${s.id}`)}
                   style={{ flex: 1, padding: "10px", background: "var(--primary)", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", ...fr(600, "13px") }}
                 >
                   Edit Sesi
                 </button>
                 <button
+                  data-testid="session-delete-button"
                   onClick={() => deleteSession(s.id, s.title)}
                   style={{ padding: "10px 14px", background: "transparent", border: "1px solid var(--danger)", borderRadius: "8px", cursor: "pointer", ...fr(500, "13px"), color: "var(--danger)" }}
                 >

@@ -9,5 +9,5 @@ interface Props {
 }
 
 export default function CountdownTimer({ seconds }: Props) {
-  return <span style={{ ...fr(600, "18px"), color: "var(--text-light)" }}>{seconds}</span>;
+  return <span data-testid="countdown-timer" style={{ ...fr(600, "18px"), color: "var(--text-light)" }}>{seconds}</span>;
 }

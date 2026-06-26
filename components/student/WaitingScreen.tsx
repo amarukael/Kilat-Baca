@@ -18,7 +18,7 @@ interface Props {
 
 export default function WaitingScreen({ session, isDone, totalSlides, onStart }: Props) {
   return (
-    <div style={{ background: "var(--bg-card)", borderRadius: "20px", padding: "48px 40px", maxWidth: "440px", width: "100%", textAlign: "center", boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }}>
+    <div data-testid="waiting-screen" style={{ background: "var(--bg-card)", borderRadius: "20px", padding: "48px 40px", maxWidth: "440px", width: "100%", textAlign: "center", boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }}>
       {isDone ? (
         <>
           <div style={{ fontSize: "72px", marginBottom: "16px" }}>🎉</div>
@@ -38,6 +38,7 @@ export default function WaitingScreen({ session, isDone, totalSlides, onStart }:
         </>
       )}
       <button
+        data-testid="waiting-screen-start-button"
         onClick={onStart}
         style={{ padding: "16px 48px", background: "var(--primary)", color: "white", border: "none", borderRadius: "12px", cursor: "pointer", ...fc(700, "18px") }}
       >
