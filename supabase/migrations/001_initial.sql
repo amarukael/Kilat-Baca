@@ -51,21 +51,39 @@ create table if not exists kilat_baca.slides (
   order_index     int not null default 0,
   type            text not null check (type in ('text', 'image')),
   content_text    text,
-  image_url       text,
+  image_url       text,  -- format: /api/drive/file/{fileId}
   image_label     text,
   custom_duration int,
   custom_gap      int,
   created_at      timestamptz not null default now()
 );
 
-create index if not exists slides_session_id_idx on kilat_baca.slides(session_id);
-create index if not exists sessions_teacher_id_idx on kilat_baca.sessions(teacher_id);
+-- ── Google Drive OAuth config (per-teacher) ──────────────────────────────────
+-- client_id and client_secret stored here instead of env vars
+-- so different Google Cloud projects can be used per teacher account.
+
+create table if not exists kilat_baca.drive_config (
+  email          text primary key,
+  client_id      text not null,
+  client_secret  text not null,
+  access_token   text,
+  refresh_token  text,
+  token_info     jsonb,
+  updated_at     timestamptz not null default now()
+);
+
+-- ── Indexes ──────────────────────────────────────────────────────────────────
+
+create index if not exists slides_session_id_idx        on kilat_baca.slides(session_id);
+create index if not exists sessions_teacher_id_idx      on kilat_baca.sessions(teacher_id);
 create index if not exists auth_sessions_teacher_id_idx on kilat_baca.auth_sessions(teacher_id);
 
--- Grant usage to authenticated and service_role
+-- ── Grants ───────────────────────────────────────────────────────────────────
+
 grant usage on schema kilat_baca to service_role;
-grant all on all tables in schema kilat_baca to service_role;
+grant all on all tables    in schema kilat_baca to service_role;
 grant all on all sequences in schema kilat_baca to service_role;
 
 -- Images are stored in Google Drive (see /api/upload).
+-- File URLs use the internal proxy format: /api/drive/file/{fileId}
 -- No Supabase Storage bucket needed.
