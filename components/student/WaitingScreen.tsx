@@ -3,12 +3,7 @@
 import { useState, useEffect } from "react";
 import type { PublicSession } from "@/lib/types";
 
-const fc = (w: number | string, s: string): React.CSSProperties => ({
-  fontFamily: "var(--font-comfortaa), cursive", fontWeight: w, fontSize: s,
-});
-const fr = (w: number | string, s: string): React.CSSProperties => ({
-  fontFamily: "var(--font-raleway), sans-serif", fontWeight: w, fontSize: s,
-});
+import { fr, fc } from "@/lib/styles";
 
 interface Props {
   session: PublicSession;

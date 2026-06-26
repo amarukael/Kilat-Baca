@@ -3,9 +3,7 @@
 import type { PublicSlide } from "@/lib/types";
 import CountdownTimer from "./CountdownTimer";
 
-const fc = (w: number | string, s: string): React.CSSProperties => ({
-  fontFamily: "var(--font-comfortaa), cursive", fontWeight: w, fontSize: s,
-});
+import { fc } from "@/lib/styles";
 
 interface Props {
   slide: PublicSlide;

@@ -4,12 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Session } from "@/lib/types";
 
-const fr = (w: number | string, s: string): React.CSSProperties => ({
-  fontFamily: "var(--font-raleway), sans-serif", fontWeight: w, fontSize: s,
-});
-const fc = (w: number | string, s: string): React.CSSProperties => ({
-  fontFamily: "var(--font-comfortaa), cursive", fontWeight: w, fontSize: s,
-});
+import { fr, fc } from "@/lib/styles";
 
 export default function DashboardPage() {
   const router = useRouter();

@@ -1,6 +1,13 @@
 import { supabase } from "./supabase";
 import type { Teacher, Session, Slide } from "./types";
 
+// ── Internal types ────────────────────────────────────────────────────────────
+
+/** Teacher dengan passwordHash — hanya dipakai internal di store, tidak diekspos ke luar. */
+interface TeacherWithPassword extends Teacher {
+  passwordHash: string;
+}
+
 // ── DB row types (snake_case from Postgres) ──────────────────────────────────
 
 interface TeacherRow {
@@ -123,14 +130,14 @@ export const store = {
     return !error;
   },
 
-  async getTeacherByEmail(email: string): Promise<(TeacherRow & { passwordHash: string }) | undefined> {
+  async getTeacherByEmail(email: string): Promise<TeacherWithPassword | undefined> {
     const { data } = await supabase
       .from("teachers")
       .select()
       .eq("email", email.toLowerCase())
       .single<TeacherRow>();
     if (!data) return undefined;
-    return { ...data, passwordHash: data.password_hash };
+    return { ...toTeacher(data), passwordHash: data.password_hash };
   },
 
   async getTeacher(id: string): Promise<Teacher | undefined> {
@@ -359,5 +366,37 @@ export const store = {
       )
     );
     return true;
+  },
+
+  /**
+   * Direct query untuk verifikasi ownership slide.
+   * Lebih efisien dari getSessionsByTeacher — tidak perlu load semua session.
+   * Return { session, slide } jika slide ditemukan dan dimiliki teacher, null jika tidak.
+   */
+  async getSlideWithSession(
+    slideId: string,
+    teacherId: string,
+  ): Promise<{ session: Session; slide: Slide } | null> {
+    const { data: slideRow } = await supabase
+      .from("slides")
+      .select("*, sessions!inner(*, teachers!inner(id))")
+      .eq("id", slideId)
+      .eq("sessions.teacher_id", teacherId)
+      .single<SlideRow & { sessions: SessionRow }>();
+
+    if (!slideRow) return null;
+
+    const sessionRow = slideRow.sessions;
+    // Ambil semua slides untuk session agar bisa return Session lengkap
+    const { data: allSlides } = await supabase
+      .from("slides")
+      .select()
+      .eq("session_id", sessionRow.id)
+      .order("order_index")
+      .returns<SlideRow[]>();
+
+    const session = toSession(sessionRow, allSlides ?? []);
+    const slide = toSlide(slideRow);
+    return { session, slide };
   },
 };

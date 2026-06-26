@@ -3,12 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-const fr = (w: number | string, s: string): React.CSSProperties => ({
-  fontFamily: "var(--font-raleway), sans-serif", fontWeight: w, fontSize: s,
-});
-const fc = (w: number | string, s: string): React.CSSProperties => ({
-  fontFamily: "var(--font-comfortaa), cursive", fontWeight: w, fontSize: s,
-});
+import { fr, fc } from "@/lib/styles";
 
 export default function RegisterPage() {
   const router = useRouter();

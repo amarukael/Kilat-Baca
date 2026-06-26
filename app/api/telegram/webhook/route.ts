@@ -3,15 +3,18 @@
  *
  * Menerima callback dari inline keyboard bot (approve/reject teacher).
  * Daftarkan webhook ke Telegram dengan:
- *   curl "https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://<domain>/api/telegram/webhook"
+ *   curl "https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://<domain>/api/telegram/webhook&secret_token=<TELEGRAM_WEBHOOK_SECRET>"
  *
- * Keamanan: verifikasi X-Telegram-Bot-Api-Secret-Token header (opsional tapi disarankan).
+ * Keamanan: verifikasi X-Telegram-Bot-Api-Secret-Token header.
+ * Set TELEGRAM_WEBHOOK_SECRET ke nilai random string yang sama saat mendaftarkan webhook.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { store } from "@/lib/store";
 import { answerCallbackQuery, editMessageText, sendMessage } from "@/lib/telegram";
 import { Logger } from "@/lib/logger";
+
+const WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET ?? "";
 
 const logger = new Logger("api/telegram/webhook/route.ts");
 
@@ -37,6 +40,15 @@ interface TelegramUpdate {
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
+    // Verifikasi webhook secret jika dikonfigurasi
+    if (WEBHOOK_SECRET) {
+      const incomingSecret = req.headers.get("x-telegram-bot-api-secret-token");
+      if (incomingSecret !== WEBHOOK_SECRET) {
+        logger.warn("Security", "Webhook secret tidak cocok — request ditolak");
+        return new NextResponse(null, { status: 401 });
+      }
+    }
+
     const body = await req.json() as TelegramUpdate;
 
     // Handle pesan teks (contoh: /start)
