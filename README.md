@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kilat Baca
 
-## Getting Started
+Media pembelajaran membaca cepat berbasis web untuk anak Taman Kanak-Kanak (4–6 tahun). Guru menyiapkan sesi flash card visual; murid mengikuti sesi melalui link tanpa perlu login.
 
-First, run the development server:
+## Cara Kerja
+
+1. Guru login ke dashboard, buat sesi, dan upload slide (gambar/teks).
+2. Guru bagikan link sesi ke murid.
+3. Murid buka link — tampil countdown, lalu slide muncul satu per satu dengan durasi dan jeda yang sudah dikonfigurasi guru.
+4. Notifikasi registrasi guru baru dikirim ke admin via Telegram bot.
+
+## Tech Stack
+
+- **Next.js 16** (App Router) + **React 19** + **TypeScript**
+- **Supabase** — database & auth
+- **Google Drive** — penyimpanan file slide
+- **Telegram Bot API** — notifikasi admin
+- **Tailwind CSS v4**
+
+## Struktur Proyek
+
+```
+app/
+  (auth)/login, register   # Halaman autentikasi guru
+  dashboard/               # Dashboard guru: kelola sesi & slide
+  belajar/[token]/         # Halaman murid (publik, tanpa login)
+  pending/                 # Halaman tunggu setelah registrasi
+  api/
+    auth/                  # Login, logout, register
+    sessions/              # CRUD sesi
+    slides/                # CRUD slide
+    upload/                # Upload file ke Google Drive
+    drive/                 # Proxy akses file Google Drive
+    public/session/        # API publik untuk sesi murid
+    telegram/webhook/      # Webhook notifikasi Telegram
+
+components/
+  teacher/   # Komponen dashboard guru (SlideList, SlideModal, dll.)
+  student/   # Komponen tampilan murid (SlideRenderer, timer, dll.)
+
+lib/
+  store.ts       # Query layer ke Supabase
+  auth.ts        # Session & cookie helper
+  googleDrive.ts # Integrasi Google Drive API
+  telegram.ts    # Kirim notifikasi Telegram
+  styles.ts      # Font helper fr()/fc()
+  types.ts       # Shared types
+```
+
+## Setup
+
+### 1. Install dependensi
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
+bun install
+```
+
+### 2. Konfigurasi environment
+
+Salin `.env.example` ke `.env` lalu isi nilainya:
+
+```bash
+cp .env.example .env
+```
+
+| Variabel | Keterangan |
+|---|---|
+| `SUPABASE_URL` | URL project Supabase |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key Supabase (hanya server) |
+| `GOOGLE_DRIVE_FOLDER_ID` | ID folder Google Drive tempat slide disimpan |
+| `TELEGRAM_BOT_TOKEN` | Token bot Telegram untuk notifikasi admin |
+| `TELEGRAM_ADMIN_CHAT_ID` | Chat ID admin yang menerima notifikasi |
+| `TELEGRAM_WEBHOOK_SECRET` | Secret untuk verifikasi webhook Telegram (opsional) |
+
+Google Drive menggunakan **Service Account** — pastikan file credential JSON tersedia dan folder Drive sudah di-share ke service account tersebut.
+
+### 3. Jalankan development server
+
+```bash
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Buka [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+bun dev      # Development server
+bun build    # Production build
+bun start    # Jalankan production build
+bun lint     # Lint
+```
 
-## Learn More
+## Alur Pengguna
 
-To learn more about Next.js, take a look at the following resources:
+```
+Guru: /login → /dashboard → /dashboard/sesi/[id] → preview sesi
+Murid: /belajar/[token] → waiting → countdown → slide loop → selesai
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Registrasi guru baru masuk ke status **pending** sampai disetujui admin.
