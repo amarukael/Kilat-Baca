@@ -15,8 +15,8 @@ const comfortaa = Comfortaa({
 });
 
 export const metadata: Metadata = {
-  title: "Membaca Cepat TK",
-  description: "Flash card membaca cepat untuk Taman Kanak-Kanak",
+  title: "Kilat Baca",
+  description: "Media pembelajaran membaca cepat untuk Taman Kanak-Kanak",
 };
 
 export default function RootLayout({

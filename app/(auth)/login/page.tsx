@@ -34,7 +34,7 @@ export default function LoginPage() {
   return (
     <div data-testid="login-container" style={{ background: "var(--bg-card)", borderRadius: "16px", padding: "40px", width: "100%", maxWidth: "400px", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}>
       <h1 style={{ ...fc(700, "28px"), color: "var(--text-dark)", marginBottom: "8px", textAlign: "center" }}>
-        📚 Membaca Cepat TK
+        📚 Kilat Baca
       </h1>
       <p style={{ ...fr(400, "14px"), color: "var(--text-light)", textAlign: "center", marginBottom: "32px" }}>
         Masuk ke panel pengajar

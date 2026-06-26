@@ -20,7 +20,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100,
       }}>
         <a href="/dashboard" style={{ textDecoration: "none" }}>
-          <span style={{ ...fc(700, "20px"), color: "var(--primary)" }}>📚 Membaca Cepat TK</span>
+          <span style={{ ...fc(700, "20px"), color: "var(--primary)" }}>📚 Kilat Baca</span>
         </a>
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
           <span style={{ ...fr(400, "14px"), color: "var(--text-light)" }}>
