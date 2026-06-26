@@ -14,14 +14,47 @@ interface Props {
 }
 
 export default function SlideRenderer({ slide, secondsLeft, showTimer }: Props) {
+  // Hitung font size dinamis berdasarkan panjang text
+  const getResponsiveFontSize = (text: string): string => {
+    const length = text.length;
+    if (length < 30) return "clamp(48px, 10vw, 72px)";
+    if (length < 60) return "clamp(40px, 8vw, 64px)";
+    if (length < 100) return "clamp(32px, 7vw, 56px)";
+    if (length < 150) return "clamp(28px, 6vw, 48px)";
+    return "clamp(24px, 5vw, 40px)";
+  };
+
   if (slide.type === "text") {
+    const fontSize = getResponsiveFontSize(slide.contentText || "");
+    
     return (
-      <div data-testid="slide-renderer-text" style={{ textAlign: "center", padding: "32px 48px", maxWidth: "700px" }}>
-        <p style={{ ...fc(700, "clamp(32px, 8vw, 72px)"), color: "var(--text-dark)", margin: 0, lineHeight: 1.2, letterSpacing: "0.02em" }}>
+      <div 
+        data-testid="slide-renderer-text" 
+        style={{ 
+          textAlign: "center", 
+          padding: "clamp(16px, 4vh, 48px) clamp(24px, 5vw, 48px)",
+          maxWidth: "min(90vw, 700px)",
+          maxHeight: "80vh",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          overflow: "auto"
+        }}
+      >
+        <p style={{ 
+          ...fc(700, fontSize), 
+          color: "var(--text-dark)", 
+          margin: 0, 
+          lineHeight: 1.3, 
+          letterSpacing: "0.02em",
+          wordWrap: "break-word",
+          overflowWrap: "break-word"
+        }}>
           {slide.contentText}
         </p>
         {showTimer && (
-          <div style={{ marginTop: "32px" }}>
+          <div style={{ marginTop: "clamp(16px, 3vh, 32px)" }}>
             <CountdownTimer seconds={secondsLeft} />
           </div>
         )}

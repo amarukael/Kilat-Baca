@@ -7,6 +7,8 @@ import { Logger, traceStorage, logRequest, logResponse } from "@/lib/logger";
 const logger = new Logger("api/auth/register/route.ts");
 
 export async function POST(req: NextRequest) {
+  return NextResponse.json({ error: "Pendaftaran dinonaktifkan" }, { status: 403 });
+
   const traceId = req.headers.get("x-trace-id") || "no-trace";
   
   return traceStorage.run(traceId, async () => {
