@@ -55,3 +55,12 @@ export interface PublicSlide {
   duration: number;
   gap: number;
 }
+
+// Drive OAuth configuration per teacher
+export interface DriveConfig {
+  email: string;
+  accessToken: string | null;
+  refreshToken: string | null;
+  tokenInfo: object | null;
+  updatedAt: string;
+}

@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { Readable } from "stream";
 import { randomUUID } from "crypto";
 import { requireTeacherId } from "@/lib/auth";
-import { drive, DRIVE_FOLDER_ID } from "@/lib/googleDrive";
+import { getDriveClient, DRIVE_FOLDER_ID } from "@/lib/googleDrive";
+import { store } from "@/lib/store";
 import { Logger, traceStorage, logRequest, logResponse } from "@/lib/logger";
 
 const logger = new Logger("api/upload/route.ts");
@@ -19,17 +20,30 @@ export async function POST(req: NextRequest) {
   const traceId = req.headers.get("x-trace-id") || "no-trace";
   
   return traceStorage.run(traceId, async () => {
-    const url = req.url;
-    logRequest(logger, "POST", url);
+    logRequest(req);
+
+    let teacherId: string;
+    let teacherEmail: string;
 
     try {
-      logger.info("Authentication", "Memverifikasi teacher");
-      await requireTeacherId();
-      logger.info("Authentication", "Teacher terverifikasi");
+      logger.log("Authentication", "Memverifikasi teacher");
+      teacherId = await requireTeacherId(req);
+      logger.log("Authentication", "Teacher terverifikasi", { teacherId });
+
+      logger.log("Database", "Fetching teacher data", { teacherId });
+      const teacher = await store.getTeacher(teacherId);
+      if (!teacher) {
+        logger.log("Error", "Teacher not found", { teacherId });
+        const response = NextResponse.json({ error: "Teacher not found" }, { status: 404 });
+        logResponse(response, { error: "Teacher not found" });
+        return response;
+      }
+      teacherEmail = teacher.email;
+      logger.log("Authentication", "Teacher data loaded", { teacherEmail });
     } catch (error) {
-      logger.error("Authentication", "Unauthorized - teacher tidak terverifikasi", error);
+      logger.log("Error", "Unauthorized - teacher tidak terverifikasi", { error });
       const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      logResponse(logger, 401, { error: "Unauthorized" });
+      logResponse(response, { error: "Unauthorized" });
       return response;
     }
 
@@ -39,13 +53,13 @@ export async function POST(req: NextRequest) {
       const file = form.get("file") as File | null;
 
       if (!file) {
-        logger.warn("Validation", "File tidak ditemukan dalam form data");
+        logger.log("Validation", "File tidak ditemukan dalam form data");
         const response = NextResponse.json({ error: "File diperlukan" }, { status: 400 });
-        logResponse(logger, 400, { error: "File diperlukan" });
+        logResponse(response, { error: "File diperlukan" });
         return response;
       }
 
-      logger.info("Validation", "Validasi file", { 
+      logger.log("Validation", "Validasi file", { 
         fileName: file.name, 
         fileType: file.type, 
         fileSize: file.size 
@@ -53,25 +67,39 @@ export async function POST(req: NextRequest) {
 
       const ext = ALLOWED[file.type];
       if (!ext) {
-        logger.warn("Validation", "Format file tidak didukung", { fileType: file.type });
+        logger.log("Validation", "Format file tidak didukung", { fileType: file.type });
         const response = NextResponse.json({ error: "Format tidak didukung (JPG/PNG/GIF/WEBP)" }, { status: 400 });
-        logResponse(logger, 400, { error: "Format tidak didukung" });
+        logResponse(response, { error: "Format tidak didukung" });
         return response;
       }
       
       if (file.size > MAX_SIZE) {
-        logger.warn("Validation", "Ukuran file melebihi batas", { fileSize: file.size, maxSize: MAX_SIZE });
+        logger.log("Validation", "Ukuran file melebihi batas", { fileSize: file.size, maxSize: MAX_SIZE });
         const response = NextResponse.json({ error: "Ukuran file maksimal 5MB" }, { status: 400 });
-        logResponse(logger, 400, { error: "Ukuran file maksimal 5MB" });
+        logResponse(response, { error: "Ukuran file maksimal 5MB" });
         return response;
       }
 
-      logger.info("File", "Membaca file bytes");
+      logger.log("Processing", "Membaca file bytes");
       const bytes = await file.arrayBuffer();
-      logger.info("File", "File bytes berhasil dibaca", { byteLength: bytes.byteLength });
+      logger.log("Processing", "File bytes berhasil dibaca", { byteLength: bytes.byteLength });
 
       const fileName = `${randomUUID()}.${ext}`;
-      logger.info("GoogleDrive", "Mengupload file ke Google Drive", { 
+      logger.log("GoogleDrive", "Getting Drive client for teacher", { teacherEmail });
+      let drive;
+      try {
+        drive = await getDriveClient(teacherEmail);
+      } catch (error) {
+        logger.log("Error", "Failed to get Drive client - OAuth not configured", { error });
+        const response = NextResponse.json(
+          { error: "Google Drive not configured. Please authorize access first." },
+          { status: 403 }
+        );
+        logResponse(response, { error: "Drive not configured" });
+        return response;
+      }
+
+      logger.log("GoogleDrive", "Mengupload file ke Google Drive", { 
         fileName, 
         mimeType: file.type, 
         folderId: DRIVE_FOLDER_ID 
@@ -93,33 +121,33 @@ export async function POST(req: NextRequest) {
 
       const fileId = created.data.id;
       if (!fileId) {
-        logger.error("GoogleDrive", "Gagal mendapatkan file ID dari Drive response");
+        logger.log("Error", "Gagal mendapatkan file ID dari Drive response");
         const response = NextResponse.json({ error: "Gagal mendapatkan ID file dari Drive" }, { status: 500 });
-        logResponse(logger, 500, { error: "Gagal mendapatkan ID file dari Drive" });
+        logResponse(response, { error: "Gagal mendapatkan ID file dari Drive" });
         return response;
       }
 
-      logger.info("GoogleDrive", "File berhasil diupload", { fileId });
+      logger.log("GoogleDrive", "File berhasil diupload", { fileId });
 
-      logger.info("GoogleDrive", "Setting permissions ke public", { fileId });
+      logger.log("GoogleDrive", "Setting permissions ke public", { fileId });
       // Make file publicly readable
       await drive.permissions.create({
         fileId,
         requestBody: { type: "anyone", role: "reader" },
       });
-      logger.info("GoogleDrive", "Permissions berhasil di-set", { fileId });
+      logger.log("GoogleDrive", "Permissions berhasil di-set", { fileId });
 
       const publicUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
       const responseData = { url: publicUrl, name: file.name };
       
-      logger.info("Success", "Upload berhasil", { fileId, url: publicUrl, originalName: file.name });
+      logger.log("Success", "Upload berhasil", { fileId, url: publicUrl, originalName: file.name });
       const response = NextResponse.json(responseData);
-      logResponse(logger, 200, responseData);
+      logResponse(response, responseData);
       return response;
     } catch (err) {
-      logger.error("Error", "Terjadi kesalahan saat upload", err);
+      logger.log("Error", "Terjadi kesalahan saat upload", { error: err });
       const response = NextResponse.json({ error: "Gagal mengupload gambar" }, { status: 500 });
-      logResponse(logger, 500, { error: "Gagal mengupload gambar" });
+      logResponse(response, { error: "Gagal mengupload gambar" });
       return response;
     }
   });
