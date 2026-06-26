@@ -104,7 +104,10 @@ export default function StudentPage({ params }: { params: Promise<{ token: strin
           ? <SlideRenderer slide={currentSlide} secondsLeft={secondsLeft} showTimer={session.showSecondsTimer} />
           : null}
 
-      <ReadingTimer current={currentIndex} total={totalSlides} />
+      <ReadingTimer
+        secondsLeft={secondsLeft}
+        duration={phase === "gap" ? (currentSlide?.gap ?? 0) : (currentSlide?.duration ?? 0)}
+      />
     </div>
   );
 }
