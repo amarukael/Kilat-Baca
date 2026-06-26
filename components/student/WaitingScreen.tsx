@@ -22,6 +22,7 @@ export default function WaitingScreen({ session, isDone, totalSlides, onStart }:
   const [loadedCount, setLoadedCount] = useState(0);
   const [totalImages, setTotalImages] = useState(0);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (isDone) {
       setImagesReady(true);
@@ -54,6 +55,7 @@ export default function WaitingScreen({ session, isDone, totalSlides, onStart }:
       img.src = slide.imageUrl!;
     });
   }, [session, isDone]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const isProcessing = !isDone && !imagesReady;
 

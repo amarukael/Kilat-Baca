@@ -8,6 +8,7 @@ interface TeacherRow {
   email: string;
   name: string;
   password_hash: string;
+  status: "pending" | "active" | "rejected";
   created_at: string;
 }
 
@@ -42,7 +43,7 @@ interface SlideRow {
 // ── Mappers ──────────────────────────────────────────────────────────────────
 
 function toTeacher(row: TeacherRow): Teacher {
-  return { id: row.id, email: row.email, name: row.name, createdAt: row.created_at };
+  return { id: row.id, email: row.email, name: row.name, status: row.status, createdAt: row.created_at };
 }
 
 function toSlide(row: SlideRow): Slide {
@@ -86,7 +87,7 @@ export const store = {
   async createTeacher(email: string, passwordHash: string, name: string): Promise<Teacher> {
     const { data, error } = await supabase
       .from("teachers")
-      .insert({ email, name, password_hash: passwordHash })
+      .insert({ email, name, password_hash: passwordHash, status: "pending" })
       .select()
       .single<TeacherRow>();
     if (error) {
@@ -94,6 +95,32 @@ export const store = {
       throw error;
     }
     return toTeacher(data);
+  },
+
+  async getTeacherById(id: string): Promise<Teacher | undefined> {
+    const { data } = await supabase
+      .from("teachers")
+      .select()
+      .eq("id", id)
+      .single<TeacherRow>();
+    if (!data) return undefined;
+    return toTeacher(data);
+  },
+
+  async approveTeacher(id: string): Promise<boolean> {
+    const { error } = await supabase
+      .from("teachers")
+      .update({ status: "active" })
+      .eq("id", id);
+    return !error;
+  },
+
+  async rejectTeacher(id: string): Promise<boolean> {
+    const { error } = await supabase
+      .from("teachers")
+      .update({ status: "rejected" })
+      .eq("id", id);
+    return !error;
   },
 
   async getTeacherByEmail(email: string): Promise<(TeacherRow & { passwordHash: string }) | undefined> {

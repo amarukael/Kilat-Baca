@@ -68,7 +68,10 @@ export default function SessionEditorPage({ params }: { params: Promise<{ id: st
     setLoading(false);
   }, [sessionId, router]);
 
-  useEffect(() => { fetchSession(); }, [fetchSession]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchSession();
+  }, [fetchSession]);
 
   const saveSettings = useCallback(async (patch: Partial<{
     title: string; defaultDuration: number; defaultGap: number;

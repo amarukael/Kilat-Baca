@@ -31,7 +31,10 @@ export default function DashboardPage() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchSessions(); }, []);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchSessions();
+  }, []);
 
   const deleteSession = async (id: string, title: string) => {
     if (!confirm(`Hapus sesi "${title}"? Semua slide akan terhapus.`)) return;

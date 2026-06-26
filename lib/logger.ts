@@ -32,7 +32,7 @@ export class Logger {
     return `[${traceId}][${this.fileName}] ${stage} - ${message}`;
   }
 
-  info(stage: string, message: string, data?: any) {
+  info(stage: string, message: string, data?: unknown) {
     const formatted = this.formatMessage(stage, message);
     if (data !== undefined) {
       console.log(formatted, JSON.stringify(data, null, 2));
@@ -41,7 +41,7 @@ export class Logger {
     }
   }
 
-  error(stage: string, message: string, error?: any) {
+  error(stage: string, message: string, error?: unknown) {
     const formatted = this.formatMessage(stage, message);
     if (error) {
       console.error(formatted, error);
@@ -50,7 +50,7 @@ export class Logger {
     }
   }
 
-  warn(stage: string, message: string, data?: any) {
+  warn(stage: string, message: string, data?: unknown) {
     const formatted = this.formatMessage(stage, message);
     if (data !== undefined) {
       console.warn(formatted, JSON.stringify(data, null, 2));
@@ -59,7 +59,7 @@ export class Logger {
     }
   }
 
-  debug(stage: string, message: string, data?: any) {
+  debug(stage: string, message: string, data?: unknown) {
     const formatted = this.formatMessage(stage, message);
     if (data !== undefined) {
       console.debug(formatted, JSON.stringify(data, null, 2));
@@ -72,8 +72,8 @@ export class Logger {
 /**
  * Helper untuk log request masuk
  */
-export function logRequest(logger: Logger, method: string, url: string, params?: any, body?: any) {
-  const requestData: any = {
+export function logRequest(logger: Logger, method: string, url: string, params?: Record<string, unknown>, body?: Record<string, unknown>) {
+  const requestData: Record<string, unknown> = {
     method,
     url,
   };
@@ -92,8 +92,8 @@ export function logRequest(logger: Logger, method: string, url: string, params?:
 /**
  * Helper untuk log response keluar
  */
-export function logResponse(logger: Logger, status: number, data?: any) {
-  const responseData: any = {
+export function logResponse(logger: Logger, status: number, data?: unknown) {
+  const responseData: Record<string, unknown> = {
     status,
   };
 
