@@ -1,3 +1,10 @@
+import { redirect } from "next/navigation";
+
+export default function RegisterPage() {
+  redirect("/login");
+}
+
+/* DISABLED: fitur daftar dinonaktifkan sementara
 "use client";
 
 import { useState } from "react";
@@ -99,3 +106,4 @@ export default function RegisterPage() {
     </div>
   );
 }
+*/
