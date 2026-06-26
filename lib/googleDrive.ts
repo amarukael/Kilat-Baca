@@ -21,12 +21,13 @@ export async function storeDriveConfig(
 ): Promise<void> {
   const { error } = await supabase
     .from("drive_config")
-    .upsert({
+    .update({
       access_token: accessToken,
       refresh_token: refreshToken ?? null,
       token_info: tokenInfo,
       updated_at: new Date().toISOString(),
-    });
+    })
+    .eq('id', 1);
 
   if (error) throw error;
 }
