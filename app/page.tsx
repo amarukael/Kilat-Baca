@@ -38,7 +38,7 @@ export default async function HomePage() {
       }}>
         <div style={{ fontSize: "56px", marginBottom: "24px" }}>⚡</div>
         <h1 style={{ ...fc(700, "40px"), color: "var(--text-dark)", marginBottom: "16px", lineHeight: 1.2 }}>
-          Flash card membaca cepat<br />untuk anak TK
+          Kilat Baca
         </h1>
         <p style={{ ...fr(400, "18px"), color: "var(--text-light)", marginBottom: "40px", lineHeight: 1.6 }}>
           Kilat Baca membantu guru menyiapkan sesi pembelajaran visual berbasis flash card.
@@ -210,7 +210,7 @@ export default async function HomePage() {
         textAlign: "center",
       }}>
         <p style={{ ...fr(400, "13px"), color: "var(--text-light)" }}>
-          © 2026 Kilat Baca — Media pembelajaran membaca cepat untuk anak TK
+          © 2026 Kilat Baca
         </p>
       </footer>
 

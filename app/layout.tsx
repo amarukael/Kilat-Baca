@@ -16,7 +16,7 @@ const comfortaa = Comfortaa({
 
 export const metadata: Metadata = {
   title: "Kilat Baca",
-  description: "Media pembelajaran membaca cepat untuk Taman Kanak-Kanak",
+  description: "Kilat Baca — aplikasi pembelajaran visual interaktif",
 };
 
 export default function RootLayout({

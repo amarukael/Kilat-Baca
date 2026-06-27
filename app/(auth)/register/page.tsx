@@ -35,7 +35,7 @@ export default function RegisterPage() {
   return (
     <div data-testid="register-container" style={{ background: "var(--bg-card)", borderRadius: "16px", padding: "40px", width: "100%", maxWidth: "400px", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}>
       <h1 style={{ ...fc(700, "28px"), color: "var(--text-dark)", marginBottom: "8px", textAlign: "center" }}>
-        📚 Membaca Cepat TK
+        📚 Kilat Baca
       </h1>
       <p style={{ ...fr(400, "14px"), color: "var(--text-light)", textAlign: "center", marginBottom: "32px" }}>
         Buat akun pengajar baru
@@ -47,7 +47,7 @@ export default function RegisterPage() {
           <input
             data-testid="register-name-input"
             type="text" required value={name} onChange={(e) => setName(e.target.value)}
-            placeholder="Ibu Sari"
+            placeholder="Miss Halimah"
             style={{ width: "100%", padding: "12px", border: "2px solid var(--border)", borderRadius: "8px", ...fr(400, "14px"), background: "var(--bg-light)", color: "var(--text-dark)", boxSizing: "border-box" }}
           />
         </div>
@@ -56,7 +56,7 @@ export default function RegisterPage() {
           <input
             data-testid="register-email-input"
             type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-            placeholder="ibu.sari@sekolah.id"
+            placeholder="miss.halimah@sekolah.id"
             style={{ width: "100%", padding: "12px", border: "2px solid var(--border)", borderRadius: "8px", ...fr(400, "14px"), background: "var(--bg-light)", color: "var(--text-dark)", boxSizing: "border-box" }}
           />
         </div>
