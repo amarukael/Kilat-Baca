@@ -78,6 +78,8 @@ export function useSessionPlayer(session: PublicSession | null) {
     playSlidesRef.current = slides;
     setTotalSlides(slides.length);
     showSlideRef.current(0);
+    // Catat play — fire-and-forget, tidak blocking jalannya sesi
+    fetch(`/api/sessions/${session.id}/play`, { method: "POST" }).catch(() => {});
   }, [session]);
 
   const stopSession = useCallback(() => {

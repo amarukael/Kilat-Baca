@@ -399,4 +399,107 @@ export const store = {
     const slide = toSlide(slideRow);
     return { session, slide };
   },
+
+  // ── Session plays (statistik) ──────────────────────────────────────────────
+
+  /** Catat satu kali play untuk session tertentu. Dipanggil dari public route. */
+  async recordPlay(sessionId: string): Promise<void> {
+    await supabase.from("session_plays").insert({ session_id: sessionId });
+  },
+
+  /** Ambil statistik play untuk satu session milik teacher. */
+  async getSessionStats(
+    sessionId: string,
+    teacherId: string,
+  ): Promise<{ totalPlays: number; lastPlayedAt: string | null } | null> {
+    // Verifikasi ownership dulu
+    const { data: sessionRow } = await supabase
+      .from("sessions")
+      .select("id")
+      .eq("id", sessionId)
+      .eq("teacher_id", teacherId)
+      .single<{ id: string }>();
+    if (!sessionRow) return null;
+
+    const { data: rows } = await supabase
+      .from("session_plays")
+      .select("played_at")
+      .eq("session_id", sessionId)
+      .order("played_at", { ascending: false })
+      .returns<{ played_at: string }[]>();
+
+    const plays = rows ?? [];
+    return {
+      totalPlays: plays.length,
+      lastPlayedAt: plays[0]?.played_at ?? null,
+    };
+  },
+
+  // ── Duplikasi session ──────────────────────────────────────────────────────
+
+  /**
+   * Duplikat session beserta semua slide-nya.
+   * Session baru punya share_token baru dan judul "(Salinan) <judul asli>".
+   */
+  async duplicateSession(sessionId: string, teacherId: string): Promise<Session | null> {
+    // Ambil session + slides asli
+    const { data: srcRow } = await supabase
+      .from("sessions")
+      .select()
+      .eq("id", sessionId)
+      .eq("teacher_id", teacherId)
+      .single<SessionRow>();
+    if (!srcRow) return null;
+
+    const { data: srcSlides } = await supabase
+      .from("slides")
+      .select()
+      .eq("session_id", sessionId)
+      .order("order_index")
+      .returns<SlideRow[]>();
+
+    // Buat session baru
+    const { data: newSession, error: sessionError } = await supabase
+      .from("sessions")
+      .insert({
+        teacher_id: teacherId,
+        title: `(Salinan) ${srcRow.title}`,
+        description: srcRow.description,
+        default_duration: srcRow.default_duration,
+        default_gap: srcRow.default_gap,
+        shuffle_enabled: srcRow.shuffle_enabled,
+        show_seconds_timer: srcRow.show_seconds_timer,
+        is_active: srcRow.is_active,
+      })
+      .select()
+      .single<SessionRow>();
+    if (sessionError || !newSession) return null;
+
+    // Duplikat slides jika ada
+    const slides = srcSlides ?? [];
+    if (slides.length > 0) {
+      await supabase.from("slides").insert(
+        slides.map((s) => ({
+          session_id: newSession.id,
+          order_index: s.order_index,
+          type: s.type,
+          content_text: s.content_text,
+          image_url: s.image_url,
+          image_label: s.image_label,
+          custom_duration: s.custom_duration,
+          custom_gap: s.custom_gap,
+        })),
+      );
+    }
+
+    // Ambil slides yang sudah di-insert untuk return Session lengkap
+    const { data: newSlides } = await supabase
+      .from("slides")
+      .select()
+      .eq("session_id", newSession.id)
+      .order("order_index")
+      .returns<SlideRow[]>();
+
+    return toSession(newSession, newSlides ?? []);
+  },
 };
