@@ -12,9 +12,42 @@ const ADMIN_CHAT_ID = process.env.TELEGRAM_ADMIN_CHAT_ID ?? "";
 
 const API_BASE = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
+/** Timeout per percobaan fetch (ms) */
+const FETCH_TIMEOUT_MS = 8_000;
+/** Jumlah maksimum percobaan */
+const MAX_RETRIES = 3;
+
 interface TelegramResponse {
   ok: boolean;
   description?: string;
+}
+
+/**
+ * Fetch ke Telegram API dengan timeout dan retry exponential backoff.
+ * Hanya retry pada error jaringan (ETIMEDOUT, ECONNREFUSED, dsb).
+ * Error HTTP (4xx/5xx dari Telegram) tidak di-retry.
+ */
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  retries = MAX_RETRIES,
+): Promise<Response> {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    try {
+      const res = await fetch(url, { ...init, signal: controller.signal });
+      return res;
+    } catch (err) {
+      if (attempt === retries) throw err;
+      const delay = 500 * 2 ** (attempt - 1); // 500ms, 1000ms, 2000ms
+      await new Promise((r) => setTimeout(r, delay));
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  // unreachable, tapi dibutuhkan TypeScript
+  throw new Error("fetchWithRetry: batas percobaan habis");
 }
 
 /**
@@ -26,7 +59,7 @@ export async function sendMessage(text: string): Promise<void> {
     return;
   }
 
-  const res = await fetch(`${API_BASE}/sendMessage`, {
+  const res = await fetchWithRetry(`${API_BASE}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -63,7 +96,7 @@ export async function notifyNewRegistration(teacher: {
     `Waktu: ${new Date(teacher.createdAt).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })}\n\n` +
     `Setujui atau tolak akun ini:`;
 
-  const res = await fetch(`${API_BASE}/sendMessage`, {
+  const res = await fetchWithRetry(`${API_BASE}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -96,7 +129,7 @@ export async function answerCallbackQuery(
 ): Promise<void> {
   if (!BOT_TOKEN) return;
 
-  await fetch(`${API_BASE}/answerCallbackQuery`, {
+  await fetchWithRetry(`${API_BASE}/answerCallbackQuery`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -117,7 +150,7 @@ export async function editMessageText(
 ): Promise<void> {
   if (!BOT_TOKEN) return;
 
-  await fetch(`${API_BASE}/editMessageText`, {
+  await fetchWithRetry(`${API_BASE}/editMessageText`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

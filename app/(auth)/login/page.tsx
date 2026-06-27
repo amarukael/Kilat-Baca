@@ -79,7 +79,12 @@ export default function LoginPage() {
         </button>
       </form>
 
-      {/* Register link disabled */}
+      <p style={{ ...fr(400, "13px"), color: "var(--text-light)", textAlign: "center", marginTop: "20px" }}>
+        Belum punya akun?{" "}
+        <a data-testid="login-register-link" href="/register" style={{ color: "var(--primary)", fontWeight: 600, textDecoration: "none" }}>
+          Daftar
+        </a>
+      </p>
     </div>
   );
 }
