@@ -7,6 +7,7 @@ import WaitingScreen from "@/components/student/WaitingScreen";
 import GapScreen from "@/components/student/GapScreen";
 import SlideRenderer from "@/components/student/SlideRenderer";
 import ReadingTimer from "@/components/student/ReadingTimer";
+import CountdownTimer from "@/components/student/CountdownTimer";
 
 import { fr } from "@/lib/styles";
 
@@ -84,6 +85,11 @@ export default function StudentPage({ params }: { params: Promise<{ token: strin
         >
           ✕ Berhenti
         </button>
+        {session.showSecondsTimer && phase !== "gap" && (
+          <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)" }}>
+            <CountdownTimer seconds={secondsLeft} />
+          </div>
+        )}
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <span data-testid="player-slide-counter" style={{ ...fr(400, "13px"), color: "var(--text-light)" }}>
             {currentIndex + 1} / {totalSlides}
@@ -101,7 +107,7 @@ export default function StudentPage({ params }: { params: Promise<{ token: strin
       {phase === "gap"
         ? <GapScreen secondsLeft={secondsLeft} showTimer={session.showSecondsTimer} />
         : currentSlide
-          ? <SlideRenderer slide={currentSlide} secondsLeft={secondsLeft} showTimer={session.showSecondsTimer} />
+          ? <SlideRenderer slide={currentSlide} />
           : null}
 
       <ReadingTimer
