@@ -1,17 +1,14 @@
 "use client";
 
 import type { PublicSlide } from "@/lib/types";
-import CountdownTimer from "./CountdownTimer";
 
 import { fc } from "@/lib/styles";
 
 interface Props {
   slide: PublicSlide;
-  secondsLeft: number;
-  showTimer: boolean;
 }
 
-export default function SlideRenderer({ slide, secondsLeft, showTimer }: Props) {
+export default function SlideRenderer({ slide }: Props) {
 
   if (slide.type === "text") {
     const text = slide.contentText || "";
@@ -41,7 +38,7 @@ export default function SlideRenderer({ slide, secondsLeft, showTimer }: Props) 
         style={{ 
           textAlign: "center", 
           padding: "clamp(16px, 4vh, 48px) clamp(24px, 5vw, 48px)",
-          maxWidth: "min(90vw, 700px)",
+          maxWidth: "min(90vw, 1200px)",
           maxHeight: "80vh",
           display: "flex",
           flexDirection: "column",
@@ -61,11 +58,7 @@ export default function SlideRenderer({ slide, secondsLeft, showTimer }: Props) 
         }}>
           {text}
         </div>
-        {showTimer && (
-          <div style={{ marginTop: "clamp(16px, 3vh, 32px)" }}>
-            <CountdownTimer seconds={secondsLeft} />
-          </div>
-        )}
+
       </div>
     );
   }
@@ -77,14 +70,14 @@ export default function SlideRenderer({ slide, secondsLeft, showTimer }: Props) 
         data-testid="slide-renderer-image-element"
         src={slide.imageUrl}
         alt={slide.imageLabel ?? ""}
-        style={{ maxWidth: "min(80vw, 500px)", maxHeight: "55vh", objectFit: "contain", borderRadius: "12px" }}
+        style={{ maxWidth: "min(85vw, 900px)", maxHeight: "65vh", objectFit: "contain", borderRadius: "12px" }}
       />
       {slide.imageLabel && (
         <p style={{ ...fc(700, "clamp(24px, 6vw, 52px)"), color: "var(--text-dark)", margin: 0 }}>
           {slide.imageLabel}
         </p>
       )}
-      {showTimer && <CountdownTimer seconds={secondsLeft} />}
+
     </div>
   );
 }
