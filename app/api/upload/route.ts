@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
       logger.info("GoogleDrive", "Getting Drive client for teacher", { teacherEmail });
       let accessToken: string;
       try {
-        ({ accessToken } = await getDriveClient(teacherEmail));
+        ({ accessToken } = await getDriveClient());
       } catch (error) {
         logger.error("Error", "Failed to get Drive client - OAuth not configured", { error });
         const response = NextResponse.json(
