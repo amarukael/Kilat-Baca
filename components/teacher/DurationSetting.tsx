@@ -16,7 +16,7 @@ export default function DurationSetting({ duration, gap, onDurationChange, onGap
         <label style={{ display: "block", ...fr(500, "12px"), color: "var(--text-light)", marginBottom: "6px" }}>Durasi (dtk)</label>
         <input
           data-testid="duration-input"
-          type="number" min={1} max={60} value={duration}
+          type="number" min={1} max={1800} value={duration}
           onChange={(e) => onDurationChange(Number(e.target.value))}
           style={{ width: "100%", padding: "10px", border: "1px solid var(--border)", borderRadius: "8px", ...fr(400, "13px"), background: "var(--bg-light)", color: "var(--text-dark)" }}
         />

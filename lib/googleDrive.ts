@@ -128,7 +128,7 @@ export async function getAccessToken(): Promise<string> {
 //   1. If access token is still valid  → use it directly.
 //   2. If access token is expired      → refresh silently and persist new token.
 
-export async function getDriveClient(_teacherEmail?: string) {
+export async function getDriveClient() {
   let config = await getDriveConfig();
 
   if (!config) {
