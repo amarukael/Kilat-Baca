@@ -42,10 +42,12 @@ export default function LoginPage() {
 
       <form data-testid="login-form" onSubmit={submit}>
         <div style={{ marginBottom: "16px" }}>
-          <label style={{ display: "block", ...fr(600, "14px"), marginBottom: "8px", color: "var(--text-dark)" }}>
+          <label htmlFor="login-email" style={{ display: "block", ...fr(600, "14px"), marginBottom: "8px", color: "var(--text-dark)" }}>
             Email
           </label>
           <input
+            id="login-email"
+            name="email"
             data-testid="login-email-input"
             type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
             placeholder="guru@sekolah.id"
@@ -53,10 +55,12 @@ export default function LoginPage() {
           />
         </div>
         <div style={{ marginBottom: "24px" }}>
-          <label style={{ display: "block", ...fr(600, "14px"), marginBottom: "8px", color: "var(--text-dark)" }}>
+          <label htmlFor="login-password" style={{ display: "block", ...fr(600, "14px"), marginBottom: "8px", color: "var(--text-dark)" }}>
             Password
           </label>
           <input
+            id="login-password"
+            name="password"
             data-testid="login-password-input"
             type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"

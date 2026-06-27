@@ -46,10 +46,12 @@ export default function NewSessionPage() {
 
         <form data-testid="new-session-form" onSubmit={createSession}>
           <div style={{ marginBottom: "20px" }}>
-            <label style={{ display: "block", ...fr(500, "13px"), color: "var(--text-light)", marginBottom: "8px" }}>
+            <label htmlFor="session-title" style={{ display: "block", ...fr(500, "13px"), color: "var(--text-light)", marginBottom: "8px" }}>
               Nama Sesi
             </label>
             <input
+              id="session-title"
+              name="title"
               data-testid="new-session-title-input"
               autoFocus
               type="text"

@@ -192,8 +192,10 @@ export default function RegisterPage() {
 
         <form data-testid="register-form" onSubmit={submit}>
           <div style={{ marginBottom: "16px" }}>
-            <label style={{ display: "block", ...fr(600, "14px"), marginBottom: "8px", color: "var(--text-dark)" }}>Nama Lengkap</label>
+            <label htmlFor="register-name" style={{ display: "block", ...fr(600, "14px"), marginBottom: "8px", color: "var(--text-dark)" }}>Nama Lengkap</label>
             <input
+              id="register-name"
+              name="name"
               data-testid="register-name-input"
               type="text" required value={name} onChange={(e) => setName(e.target.value)}
               placeholder="Miss Halimah"
@@ -201,8 +203,10 @@ export default function RegisterPage() {
             />
           </div>
           <div style={{ marginBottom: "16px" }}>
-            <label style={{ display: "block", ...fr(600, "14px"), marginBottom: "8px", color: "var(--text-dark)" }}>Email</label>
+            <label htmlFor="register-email" style={{ display: "block", ...fr(600, "14px"), marginBottom: "8px", color: "var(--text-dark)" }}>Email</label>
             <input
+              id="register-email"
+              name="email"
               data-testid="register-email-input"
               type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
               placeholder="guru@sekolah.id"
@@ -210,8 +214,10 @@ export default function RegisterPage() {
             />
           </div>
           <div style={{ marginBottom: "16px" }}>
-            <label style={{ display: "block", ...fr(600, "14px"), marginBottom: "8px", color: "var(--text-dark)" }}>Kata Sandi</label>
+            <label htmlFor="register-password" style={{ display: "block", ...fr(600, "14px"), marginBottom: "8px", color: "var(--text-dark)" }}>Kata Sandi</label>
             <input
+              id="register-password"
+              name="password"
               data-testid="register-password-input"
               type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
               placeholder="Minimal 8 karakter"
@@ -224,6 +230,7 @@ export default function RegisterPage() {
             <input
               data-testid="register-terms-checkbox"
               id="terms-checkbox"
+              name="terms"
               type="checkbox"
               checked={agreedToTerms}
               onChange={(e) => setAgreedToTerms(e.target.checked)}
