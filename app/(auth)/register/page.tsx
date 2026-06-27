@@ -145,7 +145,7 @@ export default function RegisterPage() {
                   6. Batasan Tanggung Jawab
                 </h3>
                 <p style={{ ...fr(400, "14px"), color: "var(--text-dark)", lineHeight: 1.6, margin: 0 }}>
-                  Kilat Baca disediakan "sebagaimana adanya". Kami tidak menjamin layanan bebas dari gangguan atau
+                  Kilat Baca disediakan &ldquo;sebagaimana adanya&rdquo;. Kami tidak menjamin layanan bebas dari gangguan atau
                   kesalahan. Kami tidak bertanggung jawab atas kerugian tidak langsung yang timbul dari penggunaan
                   atau ketidakmampuan menggunakan layanan ini.
                 </p>
