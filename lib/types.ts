@@ -30,6 +30,8 @@ export interface Session {
   showSecondsTimer: boolean;
   shareToken: string;
   isActive: boolean;
+  category?: string;
+  expiresAt?: string;
   createdAt: string;
   updatedAt: string;
   slides: Slide[];

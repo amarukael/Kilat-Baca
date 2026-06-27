@@ -1,8 +1,16 @@
 "use client";
 
 import type { Slide } from "@/lib/types";
-
 import { fr } from "@/lib/styles";
+
+// Generate consistent color from text content
+function getColorFromText(text: string): string {
+  if (!text) return 'hsl(200, 60%, 85%)';
+  const hash = text.split('').reduce((acc, char) => 
+    char.charCodeAt(0) + ((acc << 5) - acc), 0);
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 60%, 85%)`;
+}
 
 interface Props {
   slide: Slide;
@@ -49,9 +57,41 @@ export default function SlideCard({ slide, index, total, onMoveUp, onMoveDown, o
           )}
         </div>
         {slide.type === "text" ? (
-          <p style={{ ...fr(500, "14px"), color: "var(--text-dark)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {slide.contentText}
-          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div 
+              style={{ 
+                width: "40px", 
+                height: "40px", 
+                borderRadius: "4px", 
+                border: "1px solid var(--border)",
+                background: getColorFromText(slide.contentText || ''),
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "4px",
+                overflow: "hidden",
+                flexShrink: 0,
+              }}
+              title={slide.contentText}
+            >
+              <span style={{ 
+                ...fr(600, "9px"), 
+                color: "var(--text-dark)", 
+                textAlign: "center",
+                lineHeight: "1.2",
+                display: "-webkit-box",
+                WebkitLineClamp: 3,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+                wordBreak: "break-word",
+              }}>
+                {slide.contentText}
+              </span>
+            </div>
+            <p style={{ ...fr(500, "14px"), color: "var(--text-dark)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+              {slide.contentText}
+            </p>
+          </div>
         ) : (
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}

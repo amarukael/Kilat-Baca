@@ -26,6 +26,8 @@ export default function SessionEditorPage({ params }: { params: Promise<{ id: st
   const [shuffleEnabled, setShuffleEnabled] = useState(false);
   const [showSecondsTimer, setShowSecondsTimer] = useState(false);
   const [isActive, setIsActive] = useState(false);
+  const [category, setCategory] = useState<string>("");
+  const [expiresAt, setExpiresAt] = useState<string>("");
 
   const [showSlideModal, setShowSlideModal] = useState(false);
   const [editingSlide, setEditingSlide] = useState<Slide | null>(null);
@@ -50,6 +52,8 @@ export default function SessionEditorPage({ params }: { params: Promise<{ id: st
     setShuffleEnabled(s.shuffleEnabled);
     setShowSecondsTimer(s.showSecondsTimer);
     setIsActive(s.isActive);
+    setCategory(s.category || "");
+    setExpiresAt(s.expiresAt || "");
     setLoading(false);
   }, [sessionId, router]);
 
@@ -61,6 +65,7 @@ export default function SessionEditorPage({ params }: { params: Promise<{ id: st
   const saveSettings = useCallback(async (patch: Partial<{
     title: string; defaultDuration: number; defaultGap: number;
     shuffleEnabled: boolean; showSecondsTimer: boolean; isActive: boolean;
+    category: string; expiresAt: string;
   }>) => {
     await fetch(`/api/sessions/${sessionId}`, {
       method: "PUT",
@@ -210,10 +215,14 @@ export default function SessionEditorPage({ params }: { params: Promise<{ id: st
           showSecondsTimer={showSecondsTimer}
           isActive={isActive}
           studentUrl={studentUrl}
+          category={category}
+          expiresAt={expiresAt}
           onTitleChange={(v) => { setTitle(v); debounceSave({ title: v }); }}
           onDurationChange={(v) => { setDefaultDuration(v); debounceSave({ defaultDuration: v }); }}
           onGapChange={(v) => { setDefaultGap(v); debounceSave({ defaultGap: v }); }}
           onShuffleChange={(v) => { setShuffleEnabled(v); saveSettings({ shuffleEnabled: v }); }}
+          onCategoryChange={(v) => { setCategory(v); debounceSave({ category: v }); }}
+          onExpiresAtChange={(v) => { setExpiresAt(v); saveSettings({ expiresAt: v }); }}
           onTimerChange={(v) => { setShowSecondsTimer(v); saveSettings({ showSecondsTimer: v }); }}
           onCopyLink={() => { navigator.clipboard.writeText(studentUrl); showToast("Link disalin!"); }}
         />

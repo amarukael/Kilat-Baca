@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import type { Session } from "@/lib/types";
-
+import CategoryFilter from "@/components/teacher/CategoryFilter";
 import { fr, fc } from "@/lib/styles";
 
 interface SessionStats {
@@ -24,6 +24,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [duplicating, setDuplicating] = useState<string | null>(null);
   const [toast, setToast] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -97,6 +98,20 @@ export default function DashboardPage() {
   const studentUrl = (token: string) =>
     typeof window !== "undefined" ? `${window.location.origin}/belajar/${token}` : `/belajar/${token}`;
 
+  // Extract unique categories from sessions
+  const categories = useMemo(() => {
+    const cats = sessions
+      .map(s => s.category)
+      .filter((c): c is string => !!c);
+    return Array.from(new Set(cats)).sort();
+  }, [sessions]);
+
+  // Filter sessions by selected category
+  const filteredSessions = useMemo(() => {
+    if (!selectedCategory) return sessions;
+    return sessions.filter(s => s.category === selectedCategory);
+  }, [sessions, selectedCategory]);
+
   if (loading) {
     return (
       <div style={{ display: "flex", justifyContent: "center", paddingTop: "80px" }}>
@@ -107,7 +122,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "28px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
         <h1 style={{ ...fc(700, "24px"), color: "var(--text-dark)", margin: 0 }}>Sesi Pembelajaran</h1>
         <button
           data-testid="create-session-button"
@@ -118,6 +133,12 @@ export default function DashboardPage() {
         </button>
       </div>
 
+      <CategoryFilter
+        categories={categories}
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+      />
+
       {sessions.length === 0 ? (
         <div style={{ textAlign: "center", paddingTop: "80px" }}>
           <div style={{ fontSize: "64px", marginBottom: "16px" }}>📭</div>
@@ -125,7 +146,7 @@ export default function DashboardPage() {
         </div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "20px" }}>
-          {sessions.map((s) => {
+          {filteredSessions.map((s) => {
             const stats = statsMap[s.id];
             return (
               <div

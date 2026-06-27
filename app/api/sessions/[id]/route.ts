@@ -62,6 +62,7 @@ export async function PUT(req: NextRequest, { params }: { params: Params }) {
         title?: string; description?: string;
         defaultDuration?: number; defaultGap?: number;
         shuffleEnabled?: boolean; showSecondsTimer?: boolean;
+        category?: string; expiresAt?: string;
       };
       logRequest(logger, "PUT", url, { id }, body);
 
@@ -86,6 +87,8 @@ export async function PUT(req: NextRequest, { params }: { params: Params }) {
         ...(body.defaultGap !== undefined && { defaultGap: body.defaultGap }),
         ...(body.shuffleEnabled !== undefined && { shuffleEnabled: body.shuffleEnabled }),
         ...(body.showSecondsTimer !== undefined && { showSecondsTimer: body.showSecondsTimer }),
+        ...(body.category !== undefined && { category: body.category }),
+        ...(body.expiresAt !== undefined && { expiresAt: body.expiresAt }),
       };
 
       logger.info("Database", "Mengupdate session", { sessionId: id, updateData });

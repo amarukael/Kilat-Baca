@@ -41,14 +41,14 @@ export async function POST(req: NextRequest) {
   return traceStorage.run(traceId, async () => {
     try {
       const url = req.url;
-      const body = await req.json() as { title?: string; description?: string };
+      const body = await req.json() as { title?: string; description?: string; category?: string };
       logRequest(logger, "POST", url, undefined, body);
 
       logger.info("Authentication", "Memverifikasi teacher");
       const teacherId = await requireTeacherId();
       logger.info("Authentication", "Teacher terverifikasi", { teacherId });
 
-      const { title, description = "" } = body;
+      const { title, description = "", category } = body;
       
       if (!title?.trim()) {
         logger.warn("Validation", "Title kosong");
@@ -57,8 +57,8 @@ export async function POST(req: NextRequest) {
         return response;
       }
 
-      logger.info("Database", "Membuat session baru", { teacherId, title: title.trim(), description });
-      const session = await store.createSession(teacherId, title.trim(), description);
+      logger.info("Database", "Membuat session baru", { teacherId, title: title.trim(), description, category });
+      const session = await store.createSession(teacherId, title.trim(), description, category);
       logger.info("Database", "Session berhasil dibuat", { sessionId: session.id });
 
       const responseData = { session };

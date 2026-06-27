@@ -30,6 +30,8 @@ interface SessionRow {
   show_seconds_timer: boolean;
   share_token: string;
   is_active: boolean;
+  category: string | null;
+  expires_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -80,6 +82,8 @@ function toSession(row: SessionRow, slides: SlideRow[]): Session {
     showSecondsTimer: row.show_seconds_timer,
     shareToken: row.share_token,
     isActive: row.is_active,
+    category: row.category ?? undefined,
+    expiresAt: row.expires_at ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     slides: slides.map(toSlide),
@@ -176,10 +180,17 @@ export const store = {
 
   // ── Sessions ───────────────────────────────────────────────────────────────
 
-  async createSession(teacherId: string, title: string, description: string): Promise<Session> {
+  async createSession(teacherId: string, title: string, description: string, category?: string): Promise<Session> {
+    const insertData: Partial<SessionRow> = {
+      teacher_id: teacherId,
+      title,
+      description,
+    };
+    if (category) insertData.category = category;
+
     const { data, error } = await supabase
       .from("sessions")
-      .insert({ teacher_id: teacherId, title, description })
+      .insert(insertData)
       .select()
       .single<SessionRow>();
     if (error) throw error;
@@ -209,6 +220,15 @@ export const store = {
       .eq("share_token", token)
       .single<SessionRow>();
     if (!row) return undefined;
+
+    // Check if session has expired
+    if (row.expires_at) {
+      const expiryDate = new Date(row.expires_at);
+      const now = new Date();
+      if (now > expiryDate) {
+        return undefined; // Treat expired sessions as not found
+      }
+    }
 
     const { data: slides } = await supabase
       .from("slides")
@@ -257,6 +277,8 @@ export const store = {
     if (updates.shuffleEnabled !== undefined) patch.shuffle_enabled = updates.shuffleEnabled;
     if (updates.showSecondsTimer !== undefined) patch.show_seconds_timer = updates.showSecondsTimer;
     if (updates.isActive !== undefined) patch.is_active = updates.isActive;
+    if (updates.category !== undefined) patch.category = updates.category || null;
+    if (updates.expiresAt !== undefined) patch.expires_at = updates.expiresAt || null;
     patch.updated_at = new Date().toISOString();
 
     const { data: row, error } = await supabase
