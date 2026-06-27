@@ -63,10 +63,11 @@ html, body {
   position: fixed;
   bottom: 24px;
   right: 24px;
-  background: var(--text-dark);
-  color: white;
+  background: var(--bg-card);
+  color: var(--text-dark);
   padding: 16px 24px;
   border-radius: 8px;
+  border: 1px solid var(--border);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   font-weight: 500;
   font-size: 14px;
@@ -74,8 +75,16 @@ html, body {
   animation: slideIn 0.3s ease-out;
 }
 
-.toast.success { background: var(--success); }
-.toast.error { background: var(--danger); }
+.toast.success { 
+  background: var(--success); 
+  color: white;
+  border-color: var(--success);
+}
+.toast.error { 
+  background: var(--danger); 
+  color: white;
+  border-color: var(--danger);
+}
 
 @keyframes slideIn {
   from { transform: translateX(400px); opacity: 0; }
