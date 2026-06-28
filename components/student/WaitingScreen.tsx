@@ -3,12 +3,7 @@
 import { useState, useEffect } from "react";
 import type { PublicSession } from "@/lib/types";
 
-const fc = (w: number | string, s: string): React.CSSProperties => ({
-  fontFamily: "var(--font-comfortaa), cursive", fontWeight: w, fontSize: s,
-});
-const fr = (w: number | string, s: string): React.CSSProperties => ({
-  fontFamily: "var(--font-raleway), sans-serif", fontWeight: w, fontSize: s,
-});
+import { fr, fc } from "@/lib/styles";
 
 interface Props {
   session: PublicSession;
@@ -22,6 +17,7 @@ export default function WaitingScreen({ session, isDone, totalSlides, onStart }:
   const [loadedCount, setLoadedCount] = useState(0);
   const [totalImages, setTotalImages] = useState(0);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (isDone) {
       setImagesReady(true);
@@ -54,6 +50,7 @@ export default function WaitingScreen({ session, isDone, totalSlides, onStart }:
       img.src = slide.imageUrl!;
     });
   }, [session, isDone]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const isProcessing = !isDone && !imagesReady;
 
@@ -72,7 +69,7 @@ export default function WaitingScreen({ session, isDone, totalSlides, onStart }:
           <div style={{ fontSize: "72px", marginBottom: "16px" }}>📚</div>
           <h1 style={{ ...fc(700, "26px"), color: "var(--primary)", marginBottom: "8px" }}>{session.title}</h1>
           <p style={{ ...fr(400, "15px"), color: "var(--text-light)", marginBottom: "32px" }}>
-            {session.slides.length} slide · {session.defaultDuration} dtk/slide
+            {session.slides.length} slide · {Math.round(session.slides.reduce((sum, s) => sum + s.duration, 0) / session.slides.length)} dtk/slide rata-rata
             {session.shuffleEnabled ? " · acak" : ""}
           </p>
           {isProcessing && (

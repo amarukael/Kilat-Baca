@@ -4,12 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Session } from "@/lib/types";
 
-const fr = (w: number | string, s: string): React.CSSProperties => ({
-  fontFamily: "var(--font-raleway), sans-serif", fontWeight: w, fontSize: s,
-});
-const fc = (w: number | string, s: string): React.CSSProperties => ({
-  fontFamily: "var(--font-comfortaa), cursive", fontWeight: w, fontSize: s,
-});
+import { fr, fc } from "@/lib/styles";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -31,7 +26,10 @@ export default function DashboardPage() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchSessions(); }, []);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchSessions();
+  }, []);
 
   const deleteSession = async (id: string, title: string) => {
     if (!confirm(`Hapus sesi "${title}"? Semua slide akan terhapus.`)) return;

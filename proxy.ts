@@ -3,7 +3,7 @@ import { generateTraceId } from "./lib/logger";
 
 const SESSION_COOKIE = "mctk_auth";
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const token = req.cookies.get(SESSION_COOKIE)?.value;
   const { pathname } = req.nextUrl;
 

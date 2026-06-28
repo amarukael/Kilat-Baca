@@ -1,15 +1,10 @@
 import { redirect } from "next/navigation";
 import { getTeacherId } from "@/lib/auth";
 import { store } from "@/lib/store";
-import LogoutButton from "./LogoutButton";
+import LogoutButton from "@/components/teacher/LogoutButton";
 import DarkModeToggle from "@/components/teacher/DarkModeToggle";
 
-const fc = (w: number | string, s: string): React.CSSProperties => ({
-  fontFamily: "var(--font-comfortaa), cursive", fontWeight: w, fontSize: s,
-});
-const fr = (w: number | string, s: string): React.CSSProperties => ({
-  fontFamily: "var(--font-raleway), sans-serif", fontWeight: w, fontSize: s,
-});
+import { fr, fc } from "@/lib/styles";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const teacherId = await getTeacherId();
@@ -25,7 +20,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100,
       }}>
         <a href="/dashboard" style={{ textDecoration: "none" }}>
-          <span style={{ ...fc(700, "20px"), color: "var(--primary)" }}>📚 Membaca Cepat TK</span>
+          <span style={{ ...fc(700, "20px"), color: "var(--primary)" }}>📚 Kilat Baca</span>
         </a>
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
           <span style={{ ...fr(400, "14px"), color: "var(--text-light)" }}>

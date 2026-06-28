@@ -1,21 +1,9 @@
-import { redirect } from "next/navigation";
-
-export default function RegisterPage() {
-  redirect("/login");
-}
-
-/* DISABLED: fitur daftar dinonaktifkan sementara
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-const fr = (w: number | string, s: string): React.CSSProperties => ({
-  fontFamily: "var(--font-raleway), sans-serif", fontWeight: w, fontSize: s,
-});
-const fc = (w: number | string, s: string): React.CSSProperties => ({
-  fontFamily: "var(--font-comfortaa), cursive", fontWeight: w, fontSize: s,
-});
+import { fr, fc } from "@/lib/styles";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -36,7 +24,7 @@ export default function RegisterPage() {
       });
       const data = await res.json() as { error?: string };
       if (!res.ok) { setError(data.error ?? "Gagal mendaftar"); return; }
-      router.replace("/dashboard");
+      router.replace("/pending");
     } catch {
       setError("Terjadi kesalahan jaringan");
     } finally {
@@ -47,7 +35,7 @@ export default function RegisterPage() {
   return (
     <div data-testid="register-container" style={{ background: "var(--bg-card)", borderRadius: "16px", padding: "40px", width: "100%", maxWidth: "400px", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}>
       <h1 style={{ ...fc(700, "28px"), color: "var(--text-dark)", marginBottom: "8px", textAlign: "center" }}>
-        📚 Membaca Cepat TK
+        📚 Kilat Baca
       </h1>
       <p style={{ ...fr(400, "14px"), color: "var(--text-light)", textAlign: "center", marginBottom: "32px" }}>
         Buat akun pengajar baru
@@ -59,8 +47,8 @@ export default function RegisterPage() {
           <input
             data-testid="register-name-input"
             type="text" required value={name} onChange={(e) => setName(e.target.value)}
-            placeholder="Ibu Sari"
-            style={{ width: "100%", padding: "12px", border: "2px solid var(--border)", borderRadius: "8px", ...fr(400, "14px"), background: "var(--bg-light)", color: "var(--text-dark)" }}
+            placeholder="Miss Halimah"
+            style={{ width: "100%", padding: "12px", border: "2px solid var(--border)", borderRadius: "8px", ...fr(400, "14px"), background: "var(--bg-light)", color: "var(--text-dark)", boxSizing: "border-box" }}
           />
         </div>
         <div style={{ marginBottom: "16px" }}>
@@ -68,8 +56,8 @@ export default function RegisterPage() {
           <input
             data-testid="register-email-input"
             type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-            placeholder="guru@sekolah.id"
-            style={{ width: "100%", padding: "12px", border: "2px solid var(--border)", borderRadius: "8px", ...fr(400, "14px"), background: "var(--bg-light)", color: "var(--text-dark)" }}
+            placeholder="miss.halimah@sekolah.id"
+            style={{ width: "100%", padding: "12px", border: "2px solid var(--border)", borderRadius: "8px", ...fr(400, "14px"), background: "var(--bg-light)", color: "var(--text-dark)", boxSizing: "border-box" }}
           />
         </div>
         <div style={{ marginBottom: "24px" }}>
@@ -77,8 +65,8 @@ export default function RegisterPage() {
           <input
             data-testid="register-password-input"
             type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            style={{ width: "100%", padding: "12px", border: "2px solid var(--border)", borderRadius: "8px", ...fr(400, "14px"), background: "var(--bg-light)", color: "var(--text-dark)" }}
+            placeholder="Minimal 8 karakter"
+            style={{ width: "100%", padding: "12px", border: "2px solid var(--border)", borderRadius: "8px", ...fr(400, "14px"), background: "var(--bg-light)", color: "var(--text-dark)", boxSizing: "border-box" }}
           />
         </div>
 
@@ -106,4 +94,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-*/

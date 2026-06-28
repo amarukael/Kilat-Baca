@@ -37,11 +37,26 @@ export async function POST(req: NextRequest) {
 
       logger.info("Authentication", "Memverifikasi password");
       const isValid = verifyPassword(password, teacher.passwordHash);
-      
+
       if (!isValid) {
         logger.warn("Authentication", "Password tidak valid", { teacherId: teacher.id });
         const response = NextResponse.json({ error: "Email atau password salah" }, { status: 401 });
         logResponse(logger, 401, { error: "Email atau password salah" });
+        return response;
+      }
+
+      // Cek status akun
+      if (teacher.status === "pending") {
+        logger.warn("Authentication", "Akun belum dikonfirmasi admin", { teacherId: teacher.id });
+        const response = NextResponse.json({ error: "Akun Anda belum dikonfirmasi. Silakan tunggu konfirmasi dari admin." }, { status: 403 });
+        logResponse(logger, 403, { error: "Akun belum dikonfirmasi" });
+        return response;
+      }
+
+      if (teacher.status === "rejected") {
+        logger.warn("Authentication", "Akun ditolak admin", { teacherId: teacher.id });
+        const response = NextResponse.json({ error: "Akun Anda tidak disetujui. Hubungi admin untuk informasi lebih lanjut." }, { status: 403 });
+        logResponse(logger, 403, { error: "Akun ditolak" });
         return response;
       }
 
