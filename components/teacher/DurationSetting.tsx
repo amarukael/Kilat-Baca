@@ -25,7 +25,7 @@ export default function DurationSetting({ duration, gap, onDurationChange, onGap
         <label style={{ display: "block", ...fr(500, "12px"), color: "var(--text-light)", marginBottom: "6px" }}>Jeda (dtk)</label>
         <input
           data-testid="gap-input"
-          type="number" min={0} max={10} value={gap}
+          type="number" min={0} max={600} value={gap}
           onChange={(e) => onGapChange(Number(e.target.value))}
           style={{ width: "100%", padding: "10px", border: "1px solid var(--border)", borderRadius: "8px", ...fr(400, "13px"), background: "var(--bg-light)", color: "var(--text-dark)" }}
         />

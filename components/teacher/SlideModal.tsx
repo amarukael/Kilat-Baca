@@ -129,7 +129,7 @@ export default function SlideModal({
               <label style={{ display: "block", ...fr(500, "12px"), color: "var(--text-light)", marginBottom: "6px" }}>Jeda khusus (dtk)</label>
               <input
                 data-testid="slide-custom-gap-input"
-                type="number" min={0} max={10} value={slideForm.customGap}
+                type="number" min={0} max={600} value={slideForm.customGap}
                 onChange={(e) => onFormChange({ customGap: e.target.value })}
                 placeholder={`Default: ${defaultGap}dtk`}
                 style={{ width: "100%", padding: "10px", border: "1px solid var(--border)", borderRadius: "8px", ...fr(400, "13px"), background: "var(--bg-light)", color: "var(--text-dark)" }}
